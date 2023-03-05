@@ -15,8 +15,7 @@
 // TODO: fuse.h i ustawienia uC
 
 
-char i = 0;
-char j = 0;
+uint8_t j = 0;
 
 // interrupt every 3 ms
 ISR (TIM1_COMPA_vect)
@@ -45,18 +44,19 @@ int main(void)
 
     // WGM = 4, CTC (Clear Timer on Compare), TOP = OCR1A
     // use clock source with prescaler /8
-    TCCR1B = (1 << WGM12) | (1 << CS11);
+    TCCR1B = _BV(WGM12) | _BV(CS11);
     // use clock source with prescaler /64
-    //TCCR1B = (1 << WGM12) | (1 << CS11) | (1 << CS10);
+    //TCCR1B = _BV(WGM12) | _BV(CS11) | _BV(CS10);
     // use clock source with prescaler /256
-    //TCCR1B = (1 << WGM12) | (1 << CS12);
+    //TCCR1B = _BV(WGM12) | _BV(CS12);
     // use clock source with prescaler /1024
-    //TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
+    //TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
 
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
 
 
 // todo: setup watchdog
+// TODO: ustawić nieużywane piny jako WE + pullup
 
     sei();
     sleep_enable();
@@ -65,7 +65,6 @@ int main(void)
         sleep_cpu();
         // just in case
         sei();
-        //_delay_ms(1);
     }
 }
 
