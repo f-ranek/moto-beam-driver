@@ -34,9 +34,9 @@ int main(void)
     // setup timer mode
 
     // enable interrupt on compare/match
-    TIMSK1 |= 1 << OCIE1A;
+    TIMSK1 |= _BV(OCIE1A);
     // enable interrupt on overflow
-    //TIMSK1 |= 1 << TOIE1;
+    //TIMSK1 |= _BV(TOIE1);
     // count to 374
     OCR1A = 374;
 

@@ -34,8 +34,8 @@ int main(void)
     TCCR0A = _BV(WGM01) | _BV(WGM00) | _BV(COM0A1) | _BV(COM0B1);
 
     // Table 11-9. Clock Select Bit Description
-    //TCCR0B = _BV(CS02);
-    TCCR0B = _BV(CS00);
+    TCCR0B = _BV(CS02); // 256
+    // TCCR0B = _BV(CS00);
     // WGM02:0 =  7
 
     // fig 11-6 pg 76
