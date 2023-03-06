@@ -23,15 +23,6 @@ extern inline void loop_application_logic();
 // read stable pin values
 extern inline void read_pin_values();
 
-// interpret ADC readings into logical states
-extern inline void calculate_adc_readings();
-
-// execute application logic
-extern inline void execute_state_transition_changes();
-
-// update pwm outputs according to application status
-extern inline void adjust_pwm_values();
-
 // launch adc conversion for low beam value
 extern inline void launch_low_beam_adc();
 
@@ -43,6 +34,21 @@ extern inline void setup_adc();
 
 // setup 3ms event timer
 extern inline void setup_timer_3ms();
+
+// setup PWM module
+extern void start_pwm();
+
+// ustawia diodę LED na włączoną (PWM) lub wyłączoną
+extern void set_led(uint8_t on);
+
+// ustawia diodę led na włączoną na zadany okres cyklu
+extern void set_led_pwm(uint8_t duty_cycle);
+
+// ustawia światła na włączone lub wyłączone
+extern void set_low_beam_on_off(uint8_t on);
+
+// ustawia światła na wybrany ułamek mocy
+extern void set_low_beam_pwm(uint8_t duty_cycle);
 
 // get current timer value
 static inline uint16_t get_timer_value() {

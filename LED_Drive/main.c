@@ -18,6 +18,7 @@ int main(void)
 {
     setup_initial_port_status();
     setup_timer_3ms();
+    start_pwm();
 
     while (1)
     {

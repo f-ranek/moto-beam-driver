@@ -26,8 +26,10 @@ inline void setup_adc()
     uint8_t timer = get_timer_value() & 0x3F;
     // every 64 ticks = 192 ms
     if (timer == 0) {
+        // every 384 ms
         launch_low_beam_adc();
     } else if(timer == 1) {
+        // every 384 ms
         launch_led_adc();
     }
 }
@@ -45,11 +47,20 @@ void execute_state_transition_changes()
 {
     // todo: inicjalny status aplikacji?
     // todo: do wykonania dopiero, gdy licznik przkroczy np. 5? - żeby mieć odczytane wartości pinów??
+    if (GPIOR1 == 1) {
+        set_led(0);
+        set_led(1);
+        set_low_beam_on_off(0);
+    }
 }
 
 void adjust_pwm_values()
 {
-
+    // TODO:
+    // 80%
+    set_led_pwm(204);
+    // 50%
+    set_low_beam_pwm(128);
 }
 
 inline low_beam_status map_low_beam(uint16_t low_beam_value)

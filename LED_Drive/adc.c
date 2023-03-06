@@ -26,7 +26,7 @@ ISR (ADC_vect, ISR_NAKED)
         // LED
         __led_adc_result = adc_result;
         // re-enable LED output
-        DDRA |= _BV(DDA7); // ew. DDA5
+        DDRA |= _BV(7); // ew. 5
     }
 
     // wyłączenie ADC
@@ -36,7 +36,7 @@ ISR (ADC_vect, ISR_NAKED)
 }
 
 // launch adc conversion for low beam value
-inline void launch_low_beam_adc()
+void launch_low_beam_adc()
 {
     // start ADC - światła, PA3
     // REFS1 = 1 - 1.1 V as a reference
@@ -51,11 +51,11 @@ inline void launch_low_beam_adc()
 }
 
 // launch adc conversion for led value
-inline void launch_led_adc()
+void launch_led_adc()
 {
     // start ADC - LED, PA2
     // zgasić LED, port jako wejście
-    DDRA &= ~_BV(DDA7); // ew. DDA5
+    DDRA &= ~_BV(7); // ew. 5
     // REFS1 = 1 - 1.1 V as a reference
     // REFS1 = 0 - VCC as a reference
     // PA2

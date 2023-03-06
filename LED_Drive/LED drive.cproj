@@ -140,6 +140,9 @@
     <Compile Include="functions.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="pwm.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="timer_3ms.c">
       <SubType>compile</SubType>
     </Compile>

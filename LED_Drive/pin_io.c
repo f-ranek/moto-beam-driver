@@ -20,12 +20,23 @@ __pin_status __ignition_starter_status;
 __pin_status __neutral_status;
 uint8_t __button_interrupt_pending;
 
-void update_pin_status(__pin_status* status, uint8_t current_reading);
+static inline void update_pin_status(__pin_status* status, uint8_t current_reading);
+static inline void read_button_value();
 
 void read_pin_values()
 {
+    read_button_value();
 
-    uint8_t button_reading = (bit_is_set(PINA, DDA0) ? 1 : 0);
+    uint8_t neutral_reading = (bit_is_set(PINA, 1) ? 1 : 0);
+    update_pin_status(&__neutral_status, neutral_reading);
+
+    uint8_t ignition_starter_reading = PINB & (_BV(0)|_BV(1));
+    update_pin_status(&__ignition_starter_status, ignition_starter_reading);
+}
+
+static inline void read_button_value()
+{
+    uint8_t button_reading = (bit_is_set(PINA, 0) ? 1 : 0);
     uint8_t previous_button_status = __button_status.curr_status;
     update_pin_status(&__button_status, button_reading);
     uint8_t current_button_status = __button_status.curr_status;
@@ -33,18 +44,10 @@ void read_pin_values()
     if (previous_button_status == 0 && current_button_status == 1) {
         __button_interrupt_pending = 1;
     }
-
-    uint8_t neutral_reading = (bit_is_set(PINA, DDA1) ? 1 : 0);
-    update_pin_status(&__neutral_status, neutral_reading);
-
-    uint8_t ignition_starter_reading =
-        (bit_is_set(PINB, DDB0) ? 1 : 0) |
-        (bit_is_set(PINB, DDB1) ? 2 : 0);
-    update_pin_status(&__ignition_starter_status, ignition_starter_reading);
 }
 
 // aktualizuje bieżący stan pinu, jeżeli stan wejścia nie zmienił się od 3 cykli wywołania
-void update_pin_status(__pin_status* status, uint8_t current_reading)
+static inline void update_pin_status(__pin_status* status, uint8_t current_reading)
 {
     if (current_reading != status->curr_status) {
         // odczytana wartość pinu jest inna, niż obecnie aktywna dla aplikacji
