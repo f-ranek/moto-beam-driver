@@ -1,0 +1,7 @@
+Motorcycle Low Beam driver project
+
+Main author: franek
+Inception year: 2023
+
+This project is distributed under terms of Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license
+
