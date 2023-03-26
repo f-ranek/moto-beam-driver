@@ -177,7 +177,10 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      "lib_symbol_issues|2527300|419100|ce3cbc6e-d67a-4214-87d9-0bfff0a733b4|00000000-0000-0000-0000-000000000000|||",
+      "lib_symbol_issues|533400|927100|eba0073d-0ecc-49a8-9ada-62bc6de9666c|00000000-0000-0000-0000-000000000000|||"
+    ],
     "meta": {
       "version": 0
     },
@@ -419,17 +422,17 @@
       "version": 3
     },
     "net_colors": null,
-    "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "Default",
-        "pattern": "/Driver module/LED"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "/Driver module/INPUT SW"
-      }
-    ]
+    "netclass_assignments": {
+      "/Driver module/INPUT_SW": "USER INPUT",
+      "/Driver module/LED": "USER INPUT",
+      "/Driver module/MISO": "IO",
+      "/Driver module/MOSI": "IO",
+      "/Driver module/SCK": "IO",
+      "/Driver module/{ LED INPUT_SW }": "USER INPUT",
+      "/Driver module/{ SCK MISO MOSI ~{RESET} }": "IO",
+      "/Driver module/~{RESET}": "IO"
+    },
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {
