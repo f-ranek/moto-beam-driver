@@ -423,11 +423,11 @@
     "netclass_patterns": [
       {
         "netclass": "Default",
-        "pattern": "bramka"
+        "pattern": "/Driver module/LED"
       },
       {
         "netclass": "Default",
-        "pattern": "baza"
+        "pattern": "/Driver module/INPUT SW"
       }
     ]
   },
@@ -443,7 +443,7 @@
     "page_layout_descr_file": ""
   },
   "schematic": {
-    "annotate_start_num": 0,
+    "annotate_start_num": 1,
     "drawing": {
       "dashed_lines_dash_length_ratio": 12.0,
       "dashed_lines_gap_length_ratio": 3.0,
@@ -488,6 +488,14 @@
     [
       "01e69042-7c7e-48e9-b7c3-459316fd17f1",
       ""
+    ],
+    [
+      "bc381f99-814a-407f-b047-30e2660febd1",
+      "Power module"
+    ],
+    [
+      "111fb05e-7613-4dff-b0ef-7b688bb51755",
+      "Driver module"
     ]
   ],
   "text_variables": {}

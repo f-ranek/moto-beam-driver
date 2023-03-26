@@ -9,7 +9,9 @@
 
 #include "functions.h"
 
-//
+// PA2 - LED
+// PA3 - światła
+
 uint16_t __led_adc_result;
 uint16_t __low_beam_adc_result;
 
