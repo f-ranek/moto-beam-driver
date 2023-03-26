@@ -15,7 +15,7 @@ typedef enum low_beam_status_e {
     // około 200 mV (100 - 500), normalna praca
     UNDER_LOAD,
 
-    // powyżej 4 V, wszystko ok, ale żarówka wyłączona
+    // powyżej 4 V, wszystko ok, żarówka wyłączona
     FULL,
 
     UNKNOWN_READING
@@ -52,6 +52,7 @@ void execute_state_transition_changes()
         set_led(1);
         set_low_beam_on_off(0);
     }
+    GPIOR2 = is_first_pass();
 }
 
 void adjust_pwm_values()

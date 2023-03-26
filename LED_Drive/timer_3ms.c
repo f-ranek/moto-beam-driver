@@ -32,7 +32,10 @@ void setup_timer_3ms()
 
 }
 
+// maks 196 sekund
 uint16_t __timer_3ms_counter;
+// seven bits of counter, eight bit is permanent overflow flag
+uint8_t __timer_196s_counter;
 
 // interrupt every 3 ms
 ISR (TIM1_COMPA_vect, ISR_NAKED)
@@ -41,8 +44,11 @@ ISR (TIM1_COMPA_vect, ISR_NAKED)
     loop_application_logic();
 
     // increment timer tick
-    __timer_3ms_counter++;
-
+    if (++__timer_3ms_counter == 0) {
+        uint8_t hight_bit = __timer_196s_counter&_BV(7);
+        __timer_196s_counter = (__timer_196s_counter+1) | hight_bit;
+    }
+    
     // reset watchdog
     wdt_reset();
 

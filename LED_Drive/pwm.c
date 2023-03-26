@@ -63,16 +63,16 @@ void set_led(uint8_t on)
 // ustawia diodę led na włączoną na zadany okres cyklu
 void set_led_pwm(uint8_t duty_cycle)
 {
-    if (duty_cycle == 255) {
-        // wartość pinu 0
-        PORTA |= _BV(7); // ew. 5
-        // odłączyć PWM
-        disable_led_pwm();
-    } else {
+    //if (duty_cycle == 255) {
+    //    // wartość pinu 0
+    //    PORTA |= _BV(7); // ew. 5
+    //    // odłączyć PWM
+    //    disable_led_pwm();
+    //} else {
         OCR0B = duty_cycle;
         // podpięcie pod PA7
         enable_led_pwm();
-    }
+    //}
 }
 
 #define disable_beam_pwm() do { TCCR0A &= ~_BV(COM0A1); } while (0)
