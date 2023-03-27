@@ -7,15 +7,15 @@
 
 
 #include <avr/io.h>
-
 #include "functions.h"
+#include "pin_io.h"
 
 // PA0 - przycisk, zwolniony = 1 , wduszony = 0
 // PA1 - luz = 0, bieg = 1
 // PB0 - zapłon
 // PB1 - rozrusznik
 
-static __pin_status __button_status;
+__pin_status __button_status;
 __pin_status __ignition_starter_status;
 __pin_status __neutral_status;
 uint8_t __button_interrupt_pending;
@@ -41,7 +41,7 @@ static inline void read_button_value()
     uint8_t last_button_status = __button_status.curr_status;
     // czy poprzednio był wduszony, a teraz jest zwolniony?
     if (last_button_status == 0 && button_reading == 1) {
-        __button_interrupt_pending = 1;
+        __button_interrupt_pending |= 1;
     }
 }
 

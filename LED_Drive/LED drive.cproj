@@ -157,7 +157,13 @@
     <Compile Include="functions.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="pin_io.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="pwm.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="pwm.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="timer_3ms.c">

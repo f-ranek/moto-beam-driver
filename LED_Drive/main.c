@@ -13,6 +13,7 @@
 #include <avr/sleep.h>
 
 #include "functions.h"
+#include "pwm.h"
 
 int main(void)
 {

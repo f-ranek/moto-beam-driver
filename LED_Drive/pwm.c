@@ -6,6 +6,7 @@
  */
 
 #include <avr/io.h>
+#include "pwm.h"
 
 // LED
 // OCR0B, PA7
@@ -25,8 +26,8 @@ void start_pwm()
     TCCR0A = _BV(WGM01) | _BV(WGM00);
 
     // Table 11-9. Clock Select Bit Description
-    TCCR0B = _BV(CS02); // /256 -> 15 Hz - mało
-    // TCCR0B = _BV(CS00) | _BV(CS00); // /8 -> 61 Hz - chyba ok
+    // TCCR0B = _BV(CS02); // /256 -> 15 Hz - mało
+    TCCR0B = _BV(CS00) | _BV(CS00); // /8 -> 61 Hz - chyba ok
 
     // fig 11-6 pg 76
     //COM0x1:0 = 2 - non inverted pwm
@@ -41,10 +42,18 @@ void start_pwm()
     // port świateł jako wyjście
     PORTB &= ~_BV(2);
     DDRB |= _BV(2);
+
+    // default LED duty cycle - 100%
+    OCR0B = 255;
 }
 
-#define disable_led_pwm() do { TCCR0A &= ~_BV(COM0B1); } while (0)
-#define enable_led_pwm() do { TCCR0A |= _BV(COM0B1); } while (0)
+static inline void disable_led_pwm() {
+    TCCR0A &= ~_BV(COM0B1);
+}
+
+static inline void enable_led_pwm() {
+    TCCR0A |= _BV(COM0B1);
+}
 
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
 void set_led(uint8_t on)
@@ -75,14 +84,14 @@ void set_led_pwm(uint8_t duty_cycle)
     //}
 }
 
-#define disable_beam_pwm() do { TCCR0A &= ~_BV(COM0A1); } while (0)
+#define disable_beam_pwm() do { TCCR0A &= ~_BV(COM0A1); set_beam_pwm(0); } while (0)
 // Table 11-3. Compare Output Mode, Fast PWM Mode
 // Clear OC0A on Compare Match
 // Set OC0A at BOTTOM (non-inverting mode)
 #define enable_beam_pwm() do { TCCR0A |= _BV(COM0A1); } while (0)
 
 // ustawia światła na włączone lub wyłączone
-void set_low_beam_on_off(uint8_t on)
+void set_beam_on_off(uint8_t on)
 {
     // ustawienie wartości portu
     if (on) {
@@ -95,9 +104,9 @@ void set_low_beam_on_off(uint8_t on)
 }
 
 // ustawia światła na wybrany ułamek mocy
-void set_low_beam_pwm(uint8_t duty_cycle)
+void start_beam_pwm(uint8_t duty_cycle)
 {
-    OCR0A = duty_cycle;
+    set_beam_pwm(duty_cycle);
     // aktywacja wyjścia PWM
     enable_beam_pwm();
 } 

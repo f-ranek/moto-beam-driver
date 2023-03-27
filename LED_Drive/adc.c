@@ -13,7 +13,7 @@
 // PA3 - światła
 
 uint16_t __led_adc_result;
-uint16_t __low_beam_adc_result;
+uint16_t __beam_adc_result;
 
 // adc done interrupt
 ISR (ADC_vect, ISR_NAKED)
@@ -23,7 +23,7 @@ ISR (ADC_vect, ISR_NAKED)
     uint16_t adc_result = ADC;
     if (bit_is_set(ADMUX, MUX0)) {
         // światła
-        __low_beam_adc_result = adc_result;
+        __beam_adc_result = adc_result;
      } else {
         // LED
         __led_adc_result = adc_result;
@@ -38,7 +38,7 @@ ISR (ADC_vect, ISR_NAKED)
 }
 
 // launch adc conversion for low beam value
-void launch_low_beam_adc()
+void launch_beam_adc()
 {
     // start ADC - światła, PA3
     // REFS1 = 1 - 1.1 V as a reference
