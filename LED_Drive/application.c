@@ -28,13 +28,13 @@ typedef enum beam_actual_status_e {
 inline void setup_adc()
 {
     uint8_t timer = get_timer_value() & 0x3F;
-    // every 64 ticks = 192 ms
-    if (timer == 1) {
-        // every 384 ms
-        launch_beam_adc();
-    } else if(timer == 0) {
-        // every 384 ms
+    if(timer == 0) {
+        // every 64 ticks = 192 ms
         launch_led_adc();
+    } else
+    if ((timer & 0x03) == 1) {
+        // every 4 ticks = 12 ms
+        launch_beam_adc();
     }
 }
 
@@ -247,6 +247,11 @@ static inline void execute_led_info_changes()
         }
     }
 
+    if ( (timer & 0x03) != 0x03 ) {
+        // ADC is executed on (timer & 0x03) == 0x01, so we wait a little to get fresh results
+        return ;
+    }
+
     uint16_t beam_value = get_beam_adc_result();
     beam_actual_status beam_status_value = map_beam(beam_value);
 
@@ -313,6 +318,10 @@ static inline void adjust_pwm_values()
     adjust_beam_pwm();
     // TODO: adjust LED pwm
 }
+
+// do not store used registers on stack
+void loop_application_logic(void)
+    __attribute__((OS_main));
 
 void loop_application_logic()
 {

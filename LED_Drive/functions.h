@@ -27,9 +27,6 @@ extern inline void launch_beam_adc();
 // launch adc conversion for led value
 extern inline void launch_led_adc();
 
-// setup adc conversionif needed
-extern inline void setup_adc();
-
 // setup 3ms event timer
 extern inline void setup_timer_3ms();
 
