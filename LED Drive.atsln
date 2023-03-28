@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Atmel Studio Solution File, Format Version 11.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Timer_3ms", "Timer_3ms\Timer_3ms.cproj", "{DCE6C7E3-EE26-4D79-826B-08594B9AD897}"
-EndProject
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "PWM", "PWM\PWM.cproj", "{C7040296-3EC0-4FB0-98A8-5E778C94B2BB}"
-EndProject
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "LED drive", "LED_Drive\LED drive.cproj", "{3E0689E5-5D0E-41A4-8F02-D7570E336C99}"
 EndProject
 Global
@@ -15,14 +11,6 @@ Global
 		Release|AVR = Release|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.ActiveCfg = Debug|AVR
-		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.Build.0 = Debug|AVR
-		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.ActiveCfg = Release|AVR
-		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.Build.0 = Release|AVR
-		{C7040296-3EC0-4FB0-98A8-5E778C94B2BB}.Debug|AVR.ActiveCfg = Debug|AVR
-		{C7040296-3EC0-4FB0-98A8-5E778C94B2BB}.Debug|AVR.Build.0 = Debug|AVR
-		{C7040296-3EC0-4FB0-98A8-5E778C94B2BB}.Release|AVR.ActiveCfg = Release|AVR
-		{C7040296-3EC0-4FB0-98A8-5E778C94B2BB}.Release|AVR.Build.0 = Release|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Debug|AVR.ActiveCfg = Debug|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Debug|AVR.Build.0 = Debug|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Release|AVR.ActiveCfg = Release|AVR
