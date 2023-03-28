@@ -56,16 +56,16 @@ static inline void enable_led_pwm() {
 }
 
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
-void set_led(uint8_t on)
+void set_led(bool on)
 {
-    if (on == 0) {
+    if (on) {
+        // włączyć PWM
+        enable_led_pwm();
+    } else {
         // wartość pinu 0
         PORTA &= ~_BV(7); // ew. 5
         // odłączyć PWM
         disable_led_pwm();
-    } else {
-        // włączyć PWM
-        enable_led_pwm();
     }
 }
 
@@ -91,7 +91,7 @@ void set_led_pwm(uint8_t duty_cycle)
 #define enable_beam_pwm() do { TCCR0A |= _BV(COM0A1); } while (0)
 
 // ustawia światła na włączone lub wyłączone
-void set_beam_on_off(uint8_t on)
+void set_beam_on_off(bool on)
 {
     // ustawienie wartości portu
     if (on) {

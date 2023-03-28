@@ -9,17 +9,25 @@
 #ifndef PWM_H_
 #define PWM_H_
 
+#include <avr/io.h>
+#include <stdbool.h>
+
 // setup PWM module
 extern void start_pwm();
 
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
-extern void set_led(uint8_t on);
+extern void set_led(bool on);
+
+// zwraca 1, gdy LED jest zaświecona
+static inline bool is_led_on() {
+    return TCCR0A & _BV(COM0B1) ? true : false;
+}
 
 // ustawia diodę led na włączoną na zadany okres cyklu
 extern void set_led_pwm(uint8_t duty_cycle);
 
 // ustawia światła na włączone (100% mocy) lub wyłączone
-extern void set_beam_on_off(uint8_t on);
+extern void set_beam_on_off(bool on);
 
 // ustawia światła na wybrany ułamek mocy
 extern void start_beam_pwm(uint8_t duty_cycle);
@@ -30,7 +38,9 @@ static inline void set_beam_pwm(uint8_t duty_cycle) {
     OCR0A = duty_cycle;
 }
 
-#define get_beam_pwm_duty_cycle() (OCR0A)
+static inline uint8_t get_beam_pwm_duty_cycle() {
+    return OCR0A;
+}
 
 
 

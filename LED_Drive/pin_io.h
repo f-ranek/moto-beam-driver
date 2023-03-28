@@ -9,6 +9,8 @@
 #ifndef PIN_IO_H_
 #define PIN_IO_H_
 
+#include <stdbool.h>
+
 // read stable pin values
 extern inline void read_pin_values();
 
@@ -31,7 +33,7 @@ static inline uint8_t get_ignition_starter_status() {
 // zwraca jeden bit opisujący stan wejścia biegu neutralnego
 // 0 -> bieg neutralny
 // 1 -> dowolny inny bieg
-static inline uint8_t is_gear_engaged() {
+static inline bool is_gear_engaged() {
     return __neutral_status.curr_status;
 }
 
@@ -56,8 +58,8 @@ static inline uint8_t exchange_button_release_flag() {
 }
 
 // zwraca 1, jeżeli przycisk jest naciśnięty
-static inline uint8_t is_button_pressed() {
-    return __button_status.curr_status == 0 ? 1 : 0;
+static inline bool is_button_pressed() {
+    return __button_status.curr_status == 0 ? true : false;
 }
 
 static inline void ignore_next_button_release() {
