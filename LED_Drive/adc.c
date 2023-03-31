@@ -9,8 +9,9 @@
 
 #include "functions.h"
 
-// PA2 - LED
+// PA2 - LED in
 // PA3 - światła
+// PA7 - LED out
 
 uint16_t __led_adc_result;
 uint16_t __beam_adc_result;

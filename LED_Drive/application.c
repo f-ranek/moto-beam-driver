@@ -175,11 +175,12 @@ inline static void execute_engine_start_changes() {
     last_engine_start_status = current_engine_start_status;
 
     if (target_beam_status == false) {
-        set_beam_on_off(0);
+        set_beam_on_off(false);
         beam_status_changes = BEAM_OFF;
     } else if (beam_status_changes == BEAM_OFF) {
+        // launch beam brightening after wait
         beam_status_changes = BEAM_WAITING;
-        next_beam_status_change_at = ONE_SECOND_INTERVAL + get_timer_value();
+        next_beam_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
     }
 }
 
@@ -189,11 +190,12 @@ static inline beam_actual_status map_beam(uint16_t beam_value)
     // 50 mv -> 10
     // 100 mV -> 20
     // 500 mv > 102
+    // 2,5 V -> 512
     // 4 V -> 820
     if (beam_value <= 10) {
         return BEAM_VOLTAGE_ZERO;
     }
-    if (beam_value >= 20 && beam_value <= 102) {
+    if (beam_value >= 20 && beam_value <= 512) {
         return BEAM_VOLTAGE_UNDER_LOAD;
     }
     if (beam_value >= 820) {

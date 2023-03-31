@@ -28,15 +28,12 @@ void setup_initial_port_status() {
     // 7 - WY led, ew. 5
     DIDR0 = _BV(2) | _BV(3) | _BV(7);
 
-    // TODO: przekonfigurować do wartości ostatecznych
     // 0 - WE zapłon
     // 1 - WE rozrusznik
     // 2 - WY światła
     // 3 - WE reset
     DDRB = _BV(2);
-    PORTB = _BV(3)
-        | _BV(0) | _BV(1) // TODO: ta linijka nam nie będzie potrzebne, bo będzie zewnętrzny pull-down
-        ;
+    PORTB = _BV(3);
 }
 
 void setup_watchdog(void)

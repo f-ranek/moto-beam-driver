@@ -10,8 +10,6 @@
 
 // LED
 // OCR0B, PA7
-// ew:
-// OCR1B, PA5, ale wtedy trzeba skalować do 255 do 374
 
 // światła
 // OCR0A, PB2
