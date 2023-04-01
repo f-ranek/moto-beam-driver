@@ -18,7 +18,6 @@
 __pin_status __button_status;
 __pin_status __ignition_starter_status;
 __pin_status __neutral_status;
-uint8_t __button_interrupt_pending;
 
 static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles);
 static inline void read_button_value();
@@ -36,11 +35,12 @@ void read_pin_values()
 
 static inline void read_button_value()
 {
-    uint8_t button_reading = bit_is_set(PINA, 0) ? 1 : 0;
+    // wduszony - PIN = 0
+    bool button_reading = bit_is_set(PINA, 0) ? 0 : 1;
     update_pin_status(&__button_status, button_reading, 15); // ~45 ms
-    uint8_t last_button_status = __button_status.curr_status;
+    bool last_button_status = __button_status.curr_status;
     // czy poprzednio był wduszony, a teraz jest zwolniony?
-    if (last_button_status == 0 && button_reading == 1) {
+    if (last_button_status && button_reading == 0) {
         __button_interrupt_pending |= 1;
     }
 }

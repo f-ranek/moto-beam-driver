@@ -18,9 +18,11 @@
 
 // setup initial device status
 static inline void setup_initial_port_status();
+static inline void setup_watchdog();
 
 int main(void)
 {
+    setup_watchdog();
     setup_initial_port_status();
     setup_timer_3ms();
     start_pwm();
@@ -59,11 +61,11 @@ void setup_initial_port_status() {
     PORTB = _BV(3);
 }
 
-void setup_watchdog(void)
-__attribute__((naked))
-__attribute__((section(".init3")));
+//void setup_watchdog(void)
+//__attribute__((naked))
+//__attribute__((section(".init3")));
 
-void setup_watchdog()
+static inline void setup_watchdog()
 {
     wdt_reset();
     // MCUSR = 0; -- po co to?

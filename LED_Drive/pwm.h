@@ -16,7 +16,8 @@
 extern void start_pwm();
 
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
-extern void set_led(bool on);
+extern void set_led_on();
+extern void set_led_off();
 
 // zwraca 1, gdy LED jest zaświecona
 static inline bool is_led_on() {

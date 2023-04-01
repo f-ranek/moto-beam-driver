@@ -11,6 +11,7 @@
 
 #include <avr/io.h>
 
+// TODO: take only 8 bits, it should be enought
 extern uint16_t __led_adc_result;
 extern uint16_t __beam_adc_result;
 

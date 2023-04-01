@@ -53,18 +53,20 @@ static inline void enable_led_pwm() {
     TCCR0A |= _BV(COM0B1);
 }
 
-// ustawia diodę LED na włączoną (PWM) lub wyłączoną
-void set_led(bool on)
+// ustawia diodę LED na włączoną (PWM)
+void set_led_on()
 {
-    if (on) {
-        // włączyć PWM
-        enable_led_pwm();
-    } else {
-        // wartość pinu 0
-        PORTA &= ~_BV(7); // ew. 5
-        // odłączyć PWM
-        disable_led_pwm();
-    }
+    // włączyć PWM
+    enable_led_pwm();
+}
+
+// ustawia diodę LED na wyłączoną
+void set_led_off()
+{
+    // wartość pinu 0
+    PORTA &= ~_BV(7);
+    // odłączyć PWM
+    disable_led_pwm();
 }
 
 // ustawia diodę led na włączoną na zadany okres cyklu

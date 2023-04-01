@@ -112,14 +112,13 @@ typedef enum engine_start_status_e {
 } engine_start_status;
 
 static inline engine_start_status get_engine_start_status() {
-    uint8_t ignition_starter_status = get_ignition_starter_status() & 0x03;
-    if (ignition_starter_status == 0) { // pin values LL
-        return NO_IGNITION;
-    } else
-    if (ignition_starter_status == 3) { // pin values HH
-        return IGNITION_ON;
-    } else { // pin values LH or HL
-        return STARTER_CRANKING;
+    switch (get_ignition_starter_status()) {
+        case 0: // pin values LL
+            return NO_IGNITION;
+        case 3: // pin values HH
+            return IGNITION_ON;
+        default: // pin values LH or HL
+            return STARTER_CRANKING;
     }
 }
 
@@ -164,7 +163,7 @@ inline static void execute_engine_start_changes() {
                 gear_was_ever_engaged = true;
             } else {
                 // neutral
-                target_beam_status = (!force_beam_off) & (beam_was_ever_on | beam_state);
+                target_beam_status = (!force_beam_off) && (beam_was_ever_on || beam_state);
             }
             if (exchange_button_release_flag()) {
                 beam_state = false;
@@ -191,12 +190,13 @@ static inline beam_actual_status map_beam(uint16_t beam_value)
     // 50 mv -> 10
     // 100 mV -> 20
     // 500 mv > 102
+    // 1 V -> 205
     // 2,5 V -> 512
     // 4 V -> 820
     if (beam_value <= 10) {
         return BEAM_VOLTAGE_ZERO;
     }
-    if (beam_value >= 20 && beam_value <= 512) {
+    if (beam_value >= 20 && beam_value <= 205) {
         return BEAM_VOLTAGE_UNDER_LOAD;
     }
     if (beam_value >= 820) {
@@ -226,23 +226,23 @@ static inline void execute_led_info_changes()
 {
     uint16_t timer = get_timer_value();
     if (current_led_status_value == LED_INITIAL){
-        set_led(true);
+        set_led_on();
         if (timer > ONE_SECOND_INTERVAL) {
             current_led_status_value = LED_FOLLOW_BEAM;
-            set_led(false);
+            set_led_off();
         }
         return;
     }
     if (current_led_status_value != LED_FOLLOW_BEAM && next_led_status_change_at == timer) {
         if (is_led_on()) {
-            set_led(false);
+            set_led_off();
             if (current_led_status_value == LED_SLOW_BLINKING) {
                 next_led_status_change_at = FOUR_FIFTH_SECOND_INTERVAL + timer;
             } else {
                 next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
             }
         } else {
-            set_led(true);
+            set_led_on();
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
         if (current_led_status_value == LED_MEDIUM_BLINKING) {
@@ -269,7 +269,7 @@ static inline void execute_led_info_changes()
         case BEAM_ON:
             switch (beam_status_value) {
                 case BEAM_VOLTAGE_UNDER_LOAD:
-                    set_led(true);
+                    set_led_on();
                     target_led_status_value = LED_FOLLOW_BEAM;
                     break;
                 case BEAM_VOLTAGE_ZERO:
@@ -283,7 +283,7 @@ static inline void execute_led_info_changes()
         case BEAM_OFF:
             switch (beam_status_value) {
                 case BEAM_VOLTAGE_FULL:
-                    set_led(false);
+                    set_led_off();
                     target_led_status_value = LED_FOLLOW_BEAM;
                     break;
                 case BEAM_VOLTAGE_ZERO:
@@ -305,7 +305,7 @@ static inline void execute_led_info_changes()
         } else {
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
-        set_led(true);
+        set_led_on();
     }
     current_led_status_value = target_led_status_value;
 }
