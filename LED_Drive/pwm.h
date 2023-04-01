@@ -42,6 +42,4 @@ static inline uint8_t get_beam_pwm_duty_cycle() {
     return OCR0A;
 }
 
-
-
 #endif /* PWM_H_ */

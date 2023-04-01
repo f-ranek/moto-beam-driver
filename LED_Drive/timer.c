@@ -8,7 +8,8 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 
-#include "functions.h"
+// perform periodic application logic
+extern void loop_application_logic();
 
 void setup_timer_3ms()
 {

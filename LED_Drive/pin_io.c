@@ -7,7 +7,7 @@
 
 
 #include <avr/io.h>
-#include "functions.h"
+#include "timer.h"
 #include "pin_io.h"
 
 // PA0 - przycisk, zwolniony = 1 , wduszony = 0

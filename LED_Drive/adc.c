@@ -7,7 +7,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#include "functions.h"
+#include "adc.h"
 
 // PA2 - LED in
 // PA3 - światła
@@ -38,34 +38,3 @@ ISR (ADC_vect, ISR_NAKED)
     reti();
 }
 
-// launch adc conversion for low beam value
-void launch_beam_adc()
-{
-    // start ADC - światła, PA3
-    // REFS1 = 1 - 1.1 V as a reference
-    // REFS1 = 0 - VCC as a reference
-    // PA3
-    ADMUX = (0 << REFS1) | _BV(MUX1) | _BV(MUX0);
-    // ADIE: ADC Interrupt Enable
-    // ADEN: ADC Enable
-    // ADPS0, ADPS1 - prescaler = 8, 125 kHz
-    ADCSRA = _BV(ADEN) | _BV(ADIE) | _BV(ADPS0) | _BV(ADPS1);
-    // ADC will start on CPU entering sleep state
-}
-
-// launch adc conversion for led value
-void launch_led_adc()
-{
-    // start ADC - LED, PA2
-    // zgasić LED, port jako wejście
-    DDRA &= ~_BV(7); // ew. 5
-    // REFS1 = 1 - 1.1 V as a reference
-    // REFS1 = 0 - VCC as a reference
-    // PA2
-    ADMUX = (0 << REFS1) | _BV(MUX1);
-    // ADIE: ADC Interrupt Enable
-    // ADEN: ADC Enable
-    // ADPS0, ADPS1 - prescaler = 8, 125 kHz
-    ADCSRA = _BV(ADEN) | _BV(ADIE) | _BV(ADPS0) | _BV(ADPS1);
-    // ADC will start on CPU entering sleep state
-}

@@ -1,6 +1,9 @@
 .vs
 Release 
 Debug 
+Release* 
+Debug* 
 fp-info-cache
 *-backups
 sym-lib-table
+LED_Drive_XC8

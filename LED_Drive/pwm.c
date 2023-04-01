@@ -82,11 +82,19 @@ void set_led_pwm(uint8_t duty_cycle)
     //}
 }
 
-#define disable_beam_pwm() do { TCCR0A &= ~_BV(COM0A1); set_beam_pwm(0); } while (0)
+static inline void disable_beam_pwm()
+{
+    TCCR0A &= ~_BV(COM0A1);
+    set_beam_pwm(0);
+}
+
 // Table 11-3. Compare Output Mode, Fast PWM Mode
 // Clear OC0A on Compare Match
 // Set OC0A at BOTTOM (non-inverting mode)
-#define enable_beam_pwm() do { TCCR0A |= _BV(COM0A1); } while (0)
+static inline void enable_beam_pwm()
+{
+    TCCR0A |= _BV(COM0A1);
+}
 
 // ustawia światła na włączone lub wyłączone
 void set_beam_on_off(bool on)

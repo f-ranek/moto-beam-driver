@@ -38,7 +38,7 @@ static inline bool is_gear_engaged() {
 }
 
 // zwraca oraz resetuje flagę informującą o zwolnieniu przycisku
-static inline uint8_t exchange_button_release_flag() {
+static inline bool exchange_button_release_flag() {
     uint8_t result = __button_interrupt_pending;
     switch (result) {
         case 0:
@@ -54,7 +54,7 @@ static inline uint8_t exchange_button_release_flag() {
             __button_interrupt_pending = 0;
             result = 0;
     }
-    return result&1;
+    return (bool)(result&1);
 }
 
 // zwraca 1, jeżeli przycisk jest naciśnięty

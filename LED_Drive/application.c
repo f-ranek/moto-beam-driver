@@ -8,9 +8,10 @@
 #include <avr/io.h>
 #include <stdbool.h>
 
-#include "functions.h"
+#include "adc.h"
 #include "pwm.h"
 #include "pin_io.h"
+#include "timer.h"
 
 typedef enum beam_actual_status_e {
     // blisko zero V, przepalona żarówka lub bezpiczenik
