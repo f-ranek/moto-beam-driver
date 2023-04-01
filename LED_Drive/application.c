@@ -108,7 +108,7 @@ typedef enum engine_start_status_e {
     // starter in cranking
     STARTER_CRANKING,
     // engine is either running, or ready to be started
-    IGNITION_ON
+    IGNITION_POWER
 } engine_start_status;
 
 static inline engine_start_status get_engine_start_status() {
@@ -116,7 +116,7 @@ static inline engine_start_status get_engine_start_status() {
         case 0: // pin values LL
             return NO_IGNITION;
         case 3: // pin values HH
-            return IGNITION_ON;
+            return IGNITION_POWER;
         default: // pin values LH or HL
             return STARTER_CRANKING;
     }
@@ -149,7 +149,7 @@ inline static void execute_engine_start_changes() {
             target_beam_status = beam_state;
             gear_was_ever_engaged = is_gear_engaged();
             break;
-        case IGNITION_ON:
+        case IGNITION_POWER:
             if (is_gear_engaged()) {
                 // gear engaged
                 if (is_button_pressed() && !gear_was_ever_engaged) {
@@ -166,8 +166,8 @@ inline static void execute_engine_start_changes() {
                 target_beam_status = (!force_beam_off) && (beam_was_ever_on || beam_state);
             }
             if (exchange_button_release_flag()) {
-                beam_state = false;
-                force_beam_off = !force_beam_off;
+                beam_state = true;
+                force_beam_off = target_beam_status;
             }
             break;
     }
@@ -178,10 +178,12 @@ inline static void execute_engine_start_changes() {
         set_beam_on_off(false);
         beam_status_changes = BEAM_OFF;
     } else if (beam_status_changes == BEAM_OFF) {
+        // jeżeli było WDR, to od razu idziemy do zapalonej
         // launch beam brightening after wait
         beam_status_changes = BEAM_WAITING;
         next_beam_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
     }
+    // skasowanie WDR
 }
 
 static inline beam_actual_status map_beam(uint16_t beam_value)

@@ -69,6 +69,7 @@ static inline void setup_watchdog()
 {
     wdt_reset();
     // MCUSR = 0; -- po co to?
+    // TODO: zapisać sobie flagę resetu, i jeżeli było WDR, to od razu przejść do właściwego stanu - pominąć rozgrzewanie żarówki
     WDTCSR |= _BV(WDCE) | _BV(WDE);
     // Table 8-3. Watchdog Timer Prescale Select, WDP3:0 = 2, 64 ms
     WDTCSR = _BV(WDE) | _BV(WDP1);
