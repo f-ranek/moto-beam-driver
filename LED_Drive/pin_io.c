@@ -49,6 +49,10 @@ static inline void read_button_value()
 // jeżeli stan wejścia zmienił się, resetuje licznik
 static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles)
 {
+    if (is_first_pass()) {
+        status->temp_status = status->curr_status = current_reading;
+        return ;
+    }
     if (current_reading != status->curr_status) {
         // odczytana wartość pinu jest inna, niż obecnie aktywna dla aplikacji
         uint8_t timer = get_timer_value();

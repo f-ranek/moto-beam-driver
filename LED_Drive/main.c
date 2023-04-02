@@ -15,17 +15,21 @@
 
 #include "timer.h"
 #include "pwm.h"
+#include "main.h"
 
 // setup initial device status
 static inline void setup_initial_port_status();
-static inline void setup_watchdog();
 
 int main(void)
 {
-    setup_watchdog();
     setup_initial_port_status();
     setup_timer_3ms();
     start_pwm();
+
+    // TODO: DEBUG XXX
+    //PINA = 0x03; // gear and no button pressed
+    //PINB = 0x03; // ignition power on
+    //MCUSR_initial_copy = _BV(EXTRF); // external reset
 
     while (1)
     {
@@ -44,13 +48,13 @@ void setup_initial_port_status() {
     // 0 - WE przycisk
     // 1 - WE luz
     PORTA = _BV(0) | _BV(1)
-    // io ports used for SPI
-    | _BV(4) | _BV(5) | _BV(6);
+        // io ports used for SPI
+        | _BV(4) | _BV(5) | _BV(6);
 
     // Digital Input Disable Register 0
     // 2 - WE led
     // 3 - WE sensor świateł
-    // 7 - WY led, ew. 5
+    // 7 - WY led
     DIDR0 = _BV(2) | _BV(3) | _BV(7);
 
     // 0 - WE zapłon
@@ -61,15 +65,13 @@ void setup_initial_port_status() {
     PORTB = _BV(3);
 }
 
-//void setup_watchdog(void)
-//__attribute__((naked))
-//__attribute__((section(".init3")));
+void setup_watchdog() __attribute__((naked, used, section(".init3")));
 
-static inline void setup_watchdog()
+void setup_watchdog()
 {
+    MCUSR_initial_copy = MCUSR;
+    MCUSR = 0;
     wdt_reset();
-    // MCUSR = 0; -- po co to?
-    // TODO: zapisać sobie flagę resetu, i jeżeli było WDR, to od razu przejść do właściwego stanu - pominąć rozgrzewanie żarówki
     WDTCSR |= _BV(WDCE) | _BV(WDE);
     // Table 8-3. Watchdog Timer Prescale Select, WDP3:0 = 2, 64 ms
     WDTCSR = _BV(WDE) | _BV(WDP1);

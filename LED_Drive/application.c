@@ -12,6 +12,7 @@
 #include "pwm.h"
 #include "pin_io.h"
 #include "timer.h"
+#include "main.h"
 
 typedef enum beam_actual_status_e {
     // blisko zero V, przepalona żarówka lub bezpiczenik
@@ -26,7 +27,14 @@ typedef enum beam_actual_status_e {
     BEAM_VOLTAGE_UNKNOWN_READING
 } beam_actual_status;
 
-inline void setup_adc()
+static inline bool was_unexpected_reset() {
+    uint8_t reset_flags = _BV(WDRF) | _BV(BORF)
+        // remove this flag once tests are done?
+        | _BV(EXTRF);
+    return ( MCUSR_initial_copy & reset_flags ) != 0;
+}
+
+static inline void setup_adc()
 {
     uint8_t timer = get_timer_value() & 0x3F;
     if(timer == 0) {
@@ -73,7 +81,7 @@ static beam_status_change beam_status_changes;
 // we need to advance every 7th cycle
 #define BEAM_BRIGHTENING_INTERVAL (uint8_t)( FIVE_SECONDS_INTERVAL / ( 256 - 2 * BEAM_PWM_MARGIN ))
 
-inline static void adjust_beam_pwm() {
+ static void adjust_beam_pwm() {
     uint16_t timer =  get_timer_value();
     if (next_beam_status_change_at != timer) {
         return ;
@@ -128,7 +136,10 @@ static bool beam_state;
 static bool beam_was_ever_on;
 static bool force_beam_off;
 
-inline static void execute_engine_start_changes() {
+// TODO: jeżeli po włączeniu zasilania jest włączony zapłon, i jest bieg, to po
+// TODO: zakręceniu rozrusznikiem trzeba zapalić światła
+
+static void execute_engine_start_changes() {
     engine_start_status current_engine_start_status = get_engine_start_status();
     bool target_beam_status;
 
@@ -179,11 +190,15 @@ inline static void execute_engine_start_changes() {
         beam_status_changes = BEAM_OFF;
     } else if (beam_status_changes == BEAM_OFF) {
         // jeżeli było WDR, to od razu idziemy do zapalonej
-        // launch beam brightening after wait
-        beam_status_changes = BEAM_WAITING;
-        next_beam_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
+        if (was_unexpected_reset()) {
+            beam_status_changes = BEAM_ON;
+            set_beam_on_off(1);
+        } else {
+            // launch beam brightening after wait
+            beam_status_changes = BEAM_WAITING;
+            next_beam_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
+        }
     }
-    // skasowanie WDR
 }
 
 static inline beam_actual_status map_beam(uint16_t beam_value)
@@ -212,11 +227,14 @@ typedef enum led_status_e {
     // initial on for 1 second
     LED_INITIAL,
     // fast blinking, 5 Hz (i.e. 200 ms on, 200 ms off)
+    // indicates unexpected device reset
+    LED_INITIAL_FAST_BLINKING,
+    // fast blinking, 5 Hz (i.e. 200 ms on, 200 ms off)
     LED_FAST_BLINKING,
     // slow blinking, 1 Hz with 20% duty cycle (i.e. 200 ms on, 800 ms off)
     LED_SLOW_BLINKING,
-    // slow blinking, 1 Hz (i.e. 500 ms on, 500 ms off)
-    LED_MEDIUM_BLINKING,
+    // slow blinking, 0,5 Hz (i.e. 1 s on, 1 s off)
+    LED_CLOCK_BLINKING,
     // on or off depending on beam status
     LED_FOLLOW_BEAM
 } led_status;
@@ -224,32 +242,61 @@ typedef enum led_status_e {
 static led_status current_led_status_value;
 static uint16_t next_led_status_change_at;
 
-static inline void execute_led_info_changes()
+// TODO: this is way too fucking hardcoded and complicated
+static void execute_led_info_changes()
 {
     uint16_t timer = get_timer_value();
-    if (current_led_status_value == LED_INITIAL){
-        set_led_on();
-        if (timer > ONE_SECOND_INTERVAL) {
-            current_led_status_value = LED_FOLLOW_BEAM;
-            set_led_off();
-        }
-        return;
+    switch (current_led_status_value){
+        case LED_INITIAL:
+            if (was_unexpected_reset()) {
+                current_led_status_value = LED_INITIAL_FAST_BLINKING;
+                next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
+            }
+            if (timer > ONE_SECOND_INTERVAL) {
+                current_led_status_value = LED_FOLLOW_BEAM;
+                set_led_off();
+            } else {
+                set_led_on();
+            }
+            return ;
+        case LED_INITIAL_FAST_BLINKING:
+           if (timer > ONE_SECOND_INTERVAL) {
+                current_led_status_value = LED_FOLLOW_BEAM;
+                set_led_off();
+            } else if (next_led_status_change_at == timer){
+                next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
+                 if (is_led_on()) {
+                     set_led_off();
+                 } else {
+                     set_led_on();
+                 }
+            }
+            return ;
+        default:
+            break;
     }
+
+    // TODO: this is too fucking hardcoded
     if (current_led_status_value != LED_FOLLOW_BEAM && next_led_status_change_at == timer) {
         if (is_led_on()) {
             set_led_off();
             if (current_led_status_value == LED_SLOW_BLINKING) {
+                // for slow blinking, off is 4/5 second
                 next_led_status_change_at = FOUR_FIFTH_SECOND_INTERVAL + timer;
             } else {
+                // for other kind of blinking (actually fast), off is 1/5 second
                 next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
             }
         } else {
             set_led_on();
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
-        if (current_led_status_value == LED_MEDIUM_BLINKING) {
+        // override fo medium blinking, where timer is always 1/2 second
+        if (current_led_status_value == LED_CLOCK_BLINKING) {
             next_led_status_change_at = HALF_A_SECOND_INTERVAL + timer;
         }
+
+        return ;
     }
 
     if ( (timer & 0x03) != 0x03 ) {
@@ -298,12 +345,12 @@ static inline void execute_led_info_changes()
             break;
         default:
             // beam change in progress
-            target_led_status_value = LED_MEDIUM_BLINKING;
+            target_led_status_value = LED_CLOCK_BLINKING;
             break;
     }
     if (target_led_status_value != LED_FOLLOW_BEAM && current_led_status_value == LED_FOLLOW_BEAM) {
-        if (target_led_status_value == LED_MEDIUM_BLINKING) {
-            next_led_status_change_at = HALF_A_SECOND_INTERVAL + timer;
+        if (target_led_status_value == LED_CLOCK_BLINKING) {
+            next_led_status_change_at = ONE_SECOND_INTERVAL + timer;
         } else {
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
@@ -328,10 +375,11 @@ static inline void adjust_pwm_values()
 void loop_application_logic(void)
     __attribute__((OS_main));
 
-void loop_application_logic()
+inline void loop_application_logic()
 {
     read_pin_values();
     execute_state_transition_changes();
     adjust_pwm_values();
     setup_adc();
+    MCUSR_initial_copy = 0;
 }

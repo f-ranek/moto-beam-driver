@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
+#include "timer.h"
 
 // perform periodic application logic
 extern void loop_application_logic();
@@ -18,6 +19,9 @@ void setup_timer_3ms()
     // count to 374 - magic value calculated from 1MHz timer and /8 prescaler
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
     OCR1A = 374;
+
+    // XXX TODO DEBUG
+    // OCR1A = 3;
 
     // start counter
 
@@ -43,7 +47,10 @@ ISR (TIM1_COMPA_vect, ISR_NAKED)
     loop_application_logic();
 
     // increment timer tick
-    ++__timer_3ms_counter;
+    if (++__timer_3ms_counter == 0) {
+        uint8_t hight_bit = __timer_196s_counter & _BV(7);
+        __timer_196s_counter = (__timer_196s_counter+1) | hight_bit;
+    }
 
     // reset watchdog
     wdt_reset();
