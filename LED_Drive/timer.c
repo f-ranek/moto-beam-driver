@@ -17,21 +17,20 @@ void setup_timer_3ms()
     // enable interrupt on compare/match
     TIMSK1 |= _BV(OCIE1A);
     // count to 374 - magic value calculated from 1MHz timer and /8 prescaler
+    // count to 374 - magic value calculated from 8MHz timer and /64 prescaler
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
     OCR1A = 374;
 
     // start counter
 
     // WGM = 4, CTC (Clear Timer on Compare), TOP = OCR1A
-    // use clock source with prescaler /8
-    TCCR1B = _BV(WGM12) | _BV(CS11);
-    // use clock source with prescaler /64
-    //TCCR1B = _BV(WGM12) | _BV(CS11) | _BV(CS10);
-    // use clock source with prescaler /256
-    //TCCR1B = _BV(WGM12) | _BV(CS12);
-    // use clock source with prescaler /1024
-    //TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
-
+    // Table 12-6. Clock Select Bit Description
+    // 001 - no prescaler
+    // 010 - /8
+    // 011 - /64
+    // 100 - /256
+    // 101 - /1024
+    TCCR1B = _BV(WGM12) | _BV(CS12);
 }
 
 // maks 196 sekund

@@ -38,13 +38,13 @@ static inline bool was_unexpected_reset() {
 
 static inline void setup_adc()
 {
-    uint8_t timer = get_timer_value() & 0x3F;
-    #ifdef LED_PWM
+    uint8_t timer = get_timer_value() & 0x1f;
+    #ifdef LED_ADC
     if(timer == 0) {
-        // every 64 ticks = 192 ms
+        // every 32 ticks = 96 ms
         launch_led_adc();
     } else
-    #endif // LED_PWM
+    #endif // LED_ADC
     if ((timer & 0x03) == 1) {
         // every 4 ticks = 12 ms
         launch_beam_adc();
@@ -362,16 +362,14 @@ static void execute_led_info_changes()
     current_led_status_value = target_led_status_value;
 }
 
-#ifdef LED_PWM
+#ifdef LED_ADC
 static uint8_t led_buckets[5];
 // static const uint8_t led_pwm_values[5] PROGMEM = { 10, 20, 50, 120, 255 };
 static const uint8_t led_pwm_values[5] PROGMEM = { 1, 2, 5, 12, 25 };
 
 static void adjust_led_pwm()
 {
-    uint8_t timer = get_timer_value() & 0x3F;
-    if (timer != 1) {
-        // led adc is executed on timer == 0
+    if (!exchange_led_adc_result_available()) {
         return ;
     }
     uint16_t led_result = get_led_adc_result();
@@ -408,7 +406,7 @@ static void adjust_led_pwm()
         set_led_pwm(led_pwm_value);
     }
 }
-#endif // LED_PWM
+#endif // LED_ADC
 
 
 static inline void execute_state_transition_changes()
@@ -420,9 +418,9 @@ static inline void execute_state_transition_changes()
 static inline void adjust_pwm_values()
 {
     adjust_beam_pwm();
-    #ifdef LED_PWM
+    #ifdef LED_ADC
     adjust_led_pwm();
-    #endif // LED_PWM
+    #endif // LED_ADC
 }
 
 // do not store used registers on stack

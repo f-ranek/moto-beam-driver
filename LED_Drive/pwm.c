@@ -19,19 +19,25 @@ void start_pwm()
 {
     // Table 11-8. Waveform Generation Mode Bit Description
     // Fast PWM from 0 to 255
-    // ew. Phase Correct PWM, wtedy częstotliwość jet 2 razy mniejsza...
+    // ew. Phase Correct PWM, wtedy częstotliwość jest 2 razy mniejsza...
     // zweryfikować, jak wtedy działają bity COM0A1 i COM0A0
     TCCR0A = _BV(WGM01) | _BV(WGM00);
 
     // Table 11-9. Clock Select Bit Description
-    // TCCR0B = _BV(CS02); // /256 -> 15 Hz - mało
-    TCCR0B = _BV(CS00) | _BV(CS00); // /8 -> 61 Hz - chyba ok
+    // 001 - no prescaler
+    // 010 - /8
+    // 011 - /64
+    // 100 - /256
+    // 101 - /1024
+    // fOCnxPWM = fclk_I/O / (N * 256), where N = prescaler factor of 1, 8, 64, 256, 1024
+
+    // from 4 MHz and 256 prescaler, we get ~61 Hz
+    TCCR0B = _BV(CS02);
 
     // fig 11-6 pg 76
     //COM0x1:0 = 2 - non inverted pwm
     //COM0x1:0 = 3 - inverted pwm
 
-    // fOCnxPWM = fclk_I/O / (N * 256), where N = prescaler factor of 1, 8, 64, 256, 1024
 
     // port LED jako wyjście
     PORTA &= ~_BV(7); // ew. 5
@@ -41,8 +47,8 @@ void start_pwm()
     PORTB &= ~_BV(2);
     DDRB |= _BV(2);
 
-    // default LED duty cycle - 10%
-    OCR0B = 25;
+    // default LED duty cycle - 5%
+    OCR0B = 12;
 }
 
 static inline void disable_led_pwm() {

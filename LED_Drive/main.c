@@ -61,14 +61,24 @@ void setup_initial_port_status() {
     PORTB = _BV(3);
 }
 
-void setup_watchdog() __attribute__((naked, used, section(".init3")));
+void initial_setup() __attribute__((naked, used, section(".init3")));
 
-void setup_watchdog()
+void initial_setup()
 {
+    // read reset cause
     MCUSR_initial_copy = MCUSR;
     MCUSR = 0;
+    // reset watchdog
+    // by default, it times out after 15 ms, which is fine
     wdt_reset();
-    WDTCSR |= _BV(WDCE) | _BV(WDE);
-    // Table 8-3. Watchdog Timer Prescale Select, WDP3:0 = 2, 64 ms
-    WDTCSR = _BV(WDE) | _BV(WDP1);
+    // setup clock prescaler
+    // Table 6-11. Clock Prescaler Select
+    // 0000 - no prescaler - 8 MHz
+    // 0001 - /2           - 4 MHz
+    // 0010 - /4           - 2 MHz
+    // 0011 - /8           - 1 MHz
+    // enable change possibility
+    CLKPR = _BV(CLKPCE);
+    // write actual value - 4MHz
+    CLKPR = _BV(CLKPS0);
 }
