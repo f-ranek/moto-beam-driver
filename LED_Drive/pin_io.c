@@ -19,25 +19,25 @@ __pin_status __button_status;
 __pin_status __ignition_starter_status;
 __pin_status __neutral_status;
 
-static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles);
-static inline void read_button_value();
+static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles, bool first_pass);
+static inline void read_button_value(bool first_pass);
 
-void read_pin_values()
+void read_pin_values(bool first_pass)
 {
-    read_button_value();
+    read_button_value(first_pass);
 
     uint8_t neutral_reading = bit_is_set(PINA, 1) ? 1 : 0;
-    update_pin_status(&__neutral_status, neutral_reading, 3);
+    update_pin_status(&__neutral_status, neutral_reading, 3, first_pass);
 
     uint8_t ignition_starter_reading = PINB & (_BV(0)|_BV(1));
-    update_pin_status(&__ignition_starter_status, ignition_starter_reading, 3);
+    update_pin_status(&__ignition_starter_status, ignition_starter_reading, 3, first_pass);
 }
 
-static inline void read_button_value()
+static inline void read_button_value(bool first_pass)
 {
     // wduszony - PIN = 0
     bool button_reading = bit_is_set(PINA, 0) ? 0 : 1;
-    update_pin_status(&__button_status, button_reading, 15); // ~45 ms
+    update_pin_status(&__button_status, button_reading, 15, first_pass); // ~45 ms
     bool last_button_status = __button_status.curr_status;
     // czy poprzednio był wduszony, a teraz jest zwolniony?
     if (last_button_status && button_reading == 0) {
@@ -47,9 +47,9 @@ static inline void read_button_value()
 
 // aktualizuje bieżący stan pinu, jeżeli stan wejścia nie zmienił się od cycles cykli wywołania
 // jeżeli stan wejścia zmienił się, resetuje licznik
-static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles)
+static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles, bool first_pass)
 {
-    if (is_first_pass()) {
+    if (first_pass) {
         status->temp_status = status->curr_status = current_reading;
         return ;
     }

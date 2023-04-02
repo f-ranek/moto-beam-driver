@@ -15,6 +15,7 @@
 
 #include "timer.h"
 #include "pwm.h"
+#include "pin_io.h"
 #include "main.h"
 
 // setup initial device status
@@ -23,6 +24,7 @@ static inline void setup_initial_port_status();
 int main(void)
 {
     setup_initial_port_status();
+    read_pin_values(true);
     setup_timer_3ms();
     start_pwm();
 

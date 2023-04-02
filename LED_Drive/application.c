@@ -374,7 +374,7 @@ void loop_application_logic(void)
 
 inline void loop_application_logic()
 {
-    read_pin_values();
+    read_pin_values(false);
     execute_state_transition_changes();
     adjust_pwm_values();
     setup_adc();

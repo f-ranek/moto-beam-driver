@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 // read stable pin values
-extern inline void read_pin_values();
+extern inline void read_pin_values(bool first_pass);
 
 typedef struct __pin_status_s {
     uint8_t temp_status_since;
