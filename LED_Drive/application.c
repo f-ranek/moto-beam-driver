@@ -203,12 +203,6 @@ static void execute_engine_start_changes() {
 // 0 - 10   - ZERO
 // 20 - 205 - UNDER_LOAD
 // 820+     - FULL
-static const uint16_t beam_pwm_values[4][2] PROGMEM = {
-    { 10, BEAM_VOLTAGE_ZERO },
-    { 19, BEAM_VOLTAGE_UNKNOWN_READING },
-    { 205, BEAM_VOLTAGE_UNDER_LOAD },
-    { 819, BEAM_VOLTAGE_UNKNOWN_READING }
-};
 static inline beam_actual_status map_beam(uint16_t beam_value)
 {
     // 50 mv -> 10
@@ -217,11 +211,17 @@ static inline beam_actual_status map_beam(uint16_t beam_value)
     // 1 V -> 205
     // 2,5 V -> 512
     // 4 V -> 820
-    uint8_t i;
-    for (i = 0; i < 4; i++) {
-        if (beam_value <= beam_pwm_values[i][0]) {
-            return beam_pwm_values[i][1];
-        }
+    if (beam_value <= 10) {
+        return BEAM_VOLTAGE_ZERO;
+    }
+    if (beam_value <= 19) {
+        return BEAM_VOLTAGE_UNKNOWN_READING;
+    }
+    if (beam_value <= 205) {
+        return BEAM_VOLTAGE_UNDER_LOAD;
+    }
+    if (beam_value <= 819) {
+        return BEAM_VOLTAGE_UNKNOWN_READING;
     }
     return BEAM_VOLTAGE_FULL;
 }
@@ -431,9 +431,16 @@ void loop_application_logic(void)
 
 inline void loop_application_logic()
 {
-    read_pin_values(false);
+    read_pin_values();
     execute_state_transition_changes();
     adjust_pwm_values();
     setup_adc();
-    MCUSR_initial_copy = 0;
+    // was_unexpected_reset must return true (if should)
+    // for some time after system start
+    // until PINs reading stabilise
+
+    // so it is allowed to read until first 16 x 3ms = 48 ms
+    if ((get_timer_value() & 0x10) != 0) {
+        MCUSR_initial_copy = 0;
+    }
 }

@@ -24,7 +24,6 @@ static inline void setup_initial_port_status();
 int main(void)
 {
     setup_initial_port_status();
-    read_pin_values(true);
     setup_timer_3ms();
     start_pwm();
 

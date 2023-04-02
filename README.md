@@ -52,9 +52,9 @@ Do domyślnej konfiguracji mikrokontrolera zostały wprowadzone następujące zm
 `WDTON = 0` - watchdog timer always on
 `BODLEVEL[2:0] = 100` - BOD level = 4,3 V
 
-**lfuse** - `0x42`
+**lfuse** - `0x62`
 `CKDIV8 = 0` - divide system clock by 8
-`SUT[1:0] = 00`  - startup time 14CK
+`SUT[1:0] = 10`  - startup time 14CK + 64 ms
 `CKSEL[3:0] = 0010` - 8 MHz internal oscilator 
 
 ## Moduł mocy
@@ -71,7 +71,7 @@ Ja korzystam po taniości z płytki Arduino połączonej z mikrokontrolerem, ora
 Programowanie mikrokontrolera odbywa się przez `avrdude`, i np. żeby wejść w tryb interaktywny, należy wydać polecenie: `avrdude -v -p attiny84 -c arduino -P COM6 -b 19200 -t`, gdzie `COM6` oznacza nr portu, pod którym zarejestrowała się płytka Arduino podpięta do komputera.
 
 Programowanie _fuse bit_ można wykonać wydając polecenie (w trybie interaktywnym `avrdude`):
-`write lfuse 0 0x42`
+`write lfuse 0 0x62`
 `write hfuse 0 0xCC`
 
 
