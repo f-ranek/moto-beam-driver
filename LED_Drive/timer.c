@@ -20,9 +20,6 @@ void setup_timer_3ms()
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
     OCR1A = 374;
 
-    // XXX TODO DEBUG
-    // OCR1A = 3;
-
     // start counter
 
     // WGM = 4, CTC (Clear Timer on Compare), TOP = OCR1A

@@ -28,7 +28,7 @@ typedef enum beam_actual_status_e {
 } beam_actual_status;
 
 static inline bool was_unexpected_reset() {
-    uint8_t reset_flags = _BV(WDRF) | _BV(BORF)
+    uint8_t reset_flags = _BV(WDRF)
         // remove this flag once tests are done?
         | _BV(EXTRF);
     return ( MCUSR_initial_copy & reset_flags ) != 0;
@@ -133,12 +133,10 @@ static inline engine_start_status get_engine_start_status() {
 static engine_start_status last_engine_start_status;
 static bool gear_was_ever_engaged;
 static bool beam_state;
-static bool beam_was_ever_on;
 static bool force_beam_off;
 
-// TODO: jeżeli po włączeniu zasilania jest włączony zapłon, i jest bieg, to po
-// TODO: zakręceniu rozrusznikiem trzeba zapalić światła
-
+// TODO: jeżeli na włączonym zapłonie i biegu kliknę przycisk,
+// TODO: to wyłączenie zapłony nie resetuje stanu wymuszenia
 static void execute_engine_start_changes() {
     engine_start_status current_engine_start_status = get_engine_start_status();
     bool target_beam_status;
@@ -151,12 +149,12 @@ static void execute_engine_start_changes() {
             break;
         case NO_IGNITION:
             if (last_engine_start_status != NO_IGNITION) {
-                beam_state = beam_was_ever_on = false;
+                beam_state = false;
             }
             if (exchange_button_release_flag()) {
-                force_beam_off = false;
                 beam_state = !beam_state;
             }
+            force_beam_off = false;
             target_beam_status = beam_state;
             gear_was_ever_engaged = is_gear_engaged();
             break;
@@ -169,12 +167,11 @@ static void execute_engine_start_changes() {
                     force_beam_off = true;
                 }
                 beam_state = false;
-                beam_was_ever_on = true;
                 target_beam_status = !force_beam_off;
                 gear_was_ever_engaged = true;
             } else {
                 // neutral
-                target_beam_status = (!force_beam_off) && (beam_was_ever_on || beam_state);
+                target_beam_status = (!force_beam_off) && (gear_was_ever_engaged || beam_state);
             }
             if (exchange_button_release_flag()) {
                 beam_state = true;
@@ -260,7 +257,7 @@ static void execute_led_info_changes()
             }
             return ;
         case LED_INITIAL_FAST_BLINKING:
-           if (timer > ONE_SECOND_INTERVAL) {
+           if (timer > 2*ONE_SECOND_INTERVAL) {
                 current_led_status_value = LED_FOLLOW_BEAM;
                 set_led_off();
             } else if (next_led_status_change_at == timer){

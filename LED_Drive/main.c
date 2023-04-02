@@ -26,11 +26,6 @@ int main(void)
     setup_timer_3ms();
     start_pwm();
 
-    // TODO: DEBUG XXX
-    //PINA = 0x03; // gear and no button pressed
-    //PINB = 0x03; // ignition power on
-    //MCUSR_initial_copy = _BV(EXTRF); // external reset
-
     while (1)
     {
         sei();
