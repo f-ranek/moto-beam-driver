@@ -30,7 +30,7 @@ void setup_timer_3ms()
     // 011 - /64
     // 100 - /256
     // 101 - /1024
-    TCCR1B = _BV(WGM12) | _BV(CS12);
+    TCCR1B = _BV(WGM12) | _BV(CS11) | _BV(CS10);
 }
 
 // maks 196 sekund
