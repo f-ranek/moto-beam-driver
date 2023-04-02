@@ -38,10 +38,10 @@ static inline bool was_unexpected_reset() {
 
 static inline void setup_adc()
 {
-    uint8_t timer = get_timer_value() & 0x1f;
+    uint8_t timer = get_timer_value();
     #ifdef LED_ADC
-    if(timer == 0) {
-        // every 32 ticks = 96 ms
+    if (timer == 0) {
+        // every 256 ticks = 768 ms
         launch_led_adc();
     } else
     #endif // LED_ADC
@@ -70,11 +70,12 @@ static beam_status_change beam_status_changes;
 // 5 seconds in 3ms ticks
 #define FIVE_SECONDS_INTERVAL ((uint16_t)(5000 / 3))
 
+
 // 1/5 second in 3ms ticks
 #define FIFTH_SECOND_INTERVAL ((uint16_t)(200 / 3))
 #define FOUR_FIFTH_SECOND_INTERVAL ((uint16_t)(ONE_SECOND_INTERVAL - FIFTH_SECOND_INTERVAL))
 #define HALF_A_SECOND_INTERVAL ((uint16_t)(500 / 3))
-
+#define ONE_TENTH_SECOND_INTERVAL ((uint16_t)(100 / 3))
 
 // no less that 5% of beam power, no more than 95% of beam power (except 100%)
 # define BEAM_PWM_MARGIN ((uint8_t)(256 * 5 / 100))
@@ -263,7 +264,7 @@ static void execute_led_info_changes()
             }
             return ;
         case LED_INITIAL_FAST_BLINKING:
-           if (timer > 2*ONE_SECOND_INTERVAL) {
+           if (timer > 2*ONE_SECOND_INTERVAL-ONE_TENTH_SECOND_INTERVAL) { // TODO: here we have five blinks, and one very short blink
                 current_led_status_value = LED_FOLLOW_BEAM;
                 set_led_off();
             } else if (next_led_status_change_at == timer){
@@ -365,7 +366,10 @@ static void execute_led_info_changes()
 #ifdef LED_ADC
 static uint8_t led_buckets[5];
 // static const uint8_t led_pwm_values[5] PROGMEM = { 10, 20, 50, 120, 255 };
-static const uint8_t led_pwm_values[5] PROGMEM = { 1, 2, 5, 12, 25 };
+// static const uint8_t led_pwm_values[5] PROGMEM = { 1, 2, 5, 12, 25 };
+
+static const uint8_t led_pwm_values[5] PROGMEM = { 1, 4, 16, 64, 255 };
+
 
 static void adjust_led_pwm()
 {
@@ -398,8 +402,10 @@ static void adjust_led_pwm()
     } else {
         mapped_led_result = 4;
     }
-    if (++led_buckets[mapped_led_result] == 52) {
-        // bucket overflows, it can happend every 10 seconds
+
+    // TODO: using 1 actually disables buckets
+    if (++led_buckets[mapped_led_result] == 1) {
+        // bucket overflows, it can happend every 10 seconds -- XXX
         memset(led_buckets, 0, sizeof(led_buckets));
         //led_buckets[0] = led_buckets[1] = led_buckets[2] = led_buckets[3] = led_buckets[4] = 0;
         uint8_t led_pwm_value = led_pwm_values[mapped_led_result];

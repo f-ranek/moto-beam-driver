@@ -13,7 +13,6 @@
 // PA3 - światła
 // PA7 - LED out
 
-uint16_t __led_adc_result;
 uint16_t __beam_adc_result;
 
 static inline void start_adc()
@@ -38,6 +37,14 @@ static inline void start_adc()
 
 inline void launch_beam_adc()
 {
+#ifdef LED_ADC
+    // if ADC is in progress, just skip the call
+    // this should not happen, but better to not mix results
+    if (ADCSRA & _BV(ADEN)) {
+        return ;
+    }
+#endif // LED_ADC
+
     // start ADC - światła, PA3
     // REFS1 = 1 - 1.1 V as a reference
     // REFS1 = 0 - VCC as a reference
@@ -48,11 +55,16 @@ inline void launch_beam_adc()
 
 #ifdef LED_ADC
 
-uint16_t __led_adc_accumulator;
+uint16_t __led_adc_result;
 uint8_t __led_adc_counter;
 
 inline void launch_led_adc()
 {
+    // if ADC is in progress, just skip the call
+    // this should not happen, but better to not mix results
+    if (ADCSRA & _BV(ADEN)) {
+        return ;
+    }
     // może przed konwersją powinniśmy poczekać jakiś jeden cykl
     // puścić ADC np w trybie free running
     // pierwsze cztery konwersje zignorować
@@ -61,10 +73,10 @@ inline void launch_led_adc()
     // start ADC - LED, PA2
     // port jako wejście - to odpina PWM
     DDRA &= ~_BV(7);
-    // na wszelki wypadek- ustawienie 0 - wyłączenie internal pull-up resistor
+    // na wszelki wypadek - ustawienie 0 - wyłączenie internal pull-up resistor
     PORTA &= ~_BV(7);
 
-    __led_adc_accumulator = 0;
+    __led_adc_result = 0;
     __led_adc_counter = 0;
 
     // REFS1 = 1 - 1.1 V as a reference
@@ -76,6 +88,7 @@ inline void launch_led_adc()
 
 inline static void process_led_adc_results()
 {
+
     // first conversion takes 25 cycles
     // next one takes 13 cycles, let's assume 15
     // we have ADC clock running at 125 kHz
@@ -84,25 +97,34 @@ inline static void process_led_adc_results()
     // first one taking 0,2 ms
     // and next one taking 0,12 ms
 
-    // so execute 4 conversions, discard results
-    // then execute next 4 conversion, and avg results or maybe better calc median?
+    // so why the hell we are experiencing so fucking LED glitches
+
+    // so execute first conversion, discard results
+    // then execute next 2 conversion, and avg results
     // then wait until we are invoked again
 
-    uint8_t counter = ++__led_adc_counter;
-    if (counter == 8) {
-        // got it
-        // re-enable LED output
-        DDRA |= _BV(7);
-        // disable ADC
-        ADCSRA = 0;
-        // calc result
-        uint16_t adc_result = ADC;
-        __led_adc_result = (__led_adc_accumulator + adc_result) / 4;
-        // just to be on the safe side
-        __led_adc_accumulator = 0;
-    } else if (counter > 4) {
-        uint16_t adc_result = ADC;
-        __led_adc_accumulator += adc_result;
+    uint8_t counter = __led_adc_counter++;
+    uint16_t adc_result = ADC;
+    switch (counter) {
+        case 0:
+            // discard first result
+            break ;
+        case 1:
+            // second reading
+            __led_adc_result = adc_result;
+            break ;
+        case 2:
+            // last reading
+            // got it
+            // re-enable LED output
+            DDRA |= _BV(7);
+            // disable ADC
+            ADCSRA = 0;
+            // calc result
+            __led_adc_result = (__led_adc_result + adc_result) / 2;
+            break;
+        default:
+            break;
     }
 }
 

@@ -38,10 +38,9 @@ void start_pwm()
     //COM0x1:0 = 2 - non inverted pwm
     //COM0x1:0 = 3 - inverted pwm
 
-
     // port LED jako wyjście
-    PORTA &= ~_BV(7); // ew. 5
-    DDRA |= _BV(7); // ew. 5
+    PORTA &= ~_BV(7);
+    DDRA |= _BV(7);
 
     // port świateł jako wyjście
     PORTB &= ~_BV(2);
@@ -51,19 +50,14 @@ void start_pwm()
     OCR0B = 12;
 }
 
-static inline void disable_led_pwm() {
-    TCCR0A &= ~_BV(COM0B1);
-}
-
-static inline void enable_led_pwm() {
-    TCCR0A |= _BV(COM0B1);
-}
-
 // ustawia diodę LED na włączoną (PWM)
 void set_led_on()
 {
     // włączyć PWM
-    enable_led_pwm();
+    // Table 11-6. Compare Output Mode, Fast PWM Mode
+    // Clear OC0B on Compare Match, set OC0B at BOTTOM
+    // (non-inverting mode)
+    TCCR0A |= _BV(COM0B1);
 }
 
 // ustawia diodę LED na wyłączoną
@@ -72,7 +66,7 @@ void set_led_off()
     // wartość pinu 0
     PORTA &= ~_BV(7);
     // odłączyć PWM
-    disable_led_pwm();
+    TCCR0A &= ~_BV(COM0B1);
 }
 
 static inline void disable_beam_pwm()

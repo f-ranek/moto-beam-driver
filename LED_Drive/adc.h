@@ -20,7 +20,6 @@ extern void launch_beam_adc();
 // launch adc conversion for led value
 #ifdef LED_ADC
 
-extern uint16_t __led_adc_accumulator;
 extern uint8_t __led_adc_counter;
 
 extern void launch_led_adc();
@@ -35,7 +34,7 @@ static inline uint16_t get_led_adc_result()
 // reset availability flag
 static inline bool exchange_led_adc_result_available()
 {
-    bool available = __led_adc_counter == 8;
+    bool available = __led_adc_counter == 3;
     if (available) {
         __led_adc_counter = 0;
     }
