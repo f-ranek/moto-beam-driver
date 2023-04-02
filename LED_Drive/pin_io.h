@@ -51,7 +51,7 @@ static inline bool exchange_button_release_flag() {
     }
     // reset interrupt, preverse flag
     __button_interrupt_pending &= ~_BV(0);
-    return (bool)(result & 1);
+    return (bool)(result & _BV(0));
 }
 
 // zwraca true, jeżeli przycisk jest naciśnięty
@@ -60,7 +60,7 @@ static inline bool is_button_pressed() {
 }
 
 static inline void ignore_next_button_release() {
-    __button_interrupt_pending |= 2;
+    __button_interrupt_pending |= _BV(1);
 }
 
 #endif /* PIN_IO_H_ */

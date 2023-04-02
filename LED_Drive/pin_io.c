@@ -41,7 +41,7 @@ static inline void read_button_value()
     bool last_button_status = __button_status.curr_status;
     // czy poprzednio był wduszony, a teraz jest zwolniony?
     if (last_button_status && button_reading == 0) {
-        __button_interrupt_pending |= 1;
+        __button_interrupt_pending |= _BV(0);
     }
 }
 
