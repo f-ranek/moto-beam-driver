@@ -6,6 +6,8 @@
  */
 
 #include <avr/io.h>
+#include <avr/pgmspace.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "adc.h"
@@ -37,10 +39,12 @@ static inline bool was_unexpected_reset() {
 static inline void setup_adc()
 {
     uint8_t timer = get_timer_value() & 0x3F;
+    #ifdef LED_PWM
     if(timer == 0) {
         // every 64 ticks = 192 ms
         launch_led_adc();
     } else
+    #endif // LED_PWM
     if ((timer & 0x03) == 1) {
         // every 4 ticks = 12 ms
         launch_beam_adc();
@@ -135,8 +139,6 @@ static bool gear_was_ever_engaged;
 static bool beam_state;
 static bool force_beam_off;
 
-// TODO: jeżeli na włączonym zapłonie i biegu kliknę przycisk,
-// TODO: to wyłączenie zapłony nie resetuje stanu wymuszenia
 static void execute_engine_start_changes() {
     engine_start_status current_engine_start_status = get_engine_start_status();
     bool target_beam_status;
@@ -198,27 +200,31 @@ static void execute_engine_start_changes() {
     }
 }
 
+// 0 - 10   - ZERO
+// 20 - 205 - UNDER_LOAD
+// 820+     - FULL
+static const uint16_t beam_pwm_values[4][2] PROGMEM = {
+    { 10, BEAM_VOLTAGE_ZERO },
+    { 19, BEAM_VOLTAGE_UNKNOWN_READING },
+    { 205, BEAM_VOLTAGE_UNDER_LOAD },
+    { 819, BEAM_VOLTAGE_UNKNOWN_READING }
+};
 static inline beam_actual_status map_beam(uint16_t beam_value)
 {
-    // TODO: ztablicować, PROGMEM, pętla po tablicy
     // 50 mv -> 10
     // 100 mV -> 20
     // 500 mv > 102
     // 1 V -> 205
     // 2,5 V -> 512
     // 4 V -> 820
-    if (beam_value <= 10) {
-        return BEAM_VOLTAGE_ZERO;
+    uint8_t i;
+    for (i = 0; i < 4; i++) {
+        if (beam_value <= beam_pwm_values[i][0]) {
+            return beam_pwm_values[i][1];
+        }
     }
-    if (beam_value >= 20 && beam_value <= 205) {
-        return BEAM_VOLTAGE_UNDER_LOAD;
-    }
-    if (beam_value >= 820) {
-        return BEAM_VOLTAGE_FULL;
-    }
-    return BEAM_VOLTAGE_UNKNOWN_READING;
+    return BEAM_VOLTAGE_FULL;
 }
-// TODO: to samo dla LEDów
 
 typedef enum led_status_e {
     // initial on for 1 second
@@ -356,6 +362,55 @@ static void execute_led_info_changes()
     current_led_status_value = target_led_status_value;
 }
 
+#ifdef LED_PWM
+static uint8_t led_buckets[5];
+// static const uint8_t led_pwm_values[5] PROGMEM = { 10, 20, 50, 120, 255 };
+static const uint8_t led_pwm_values[5] PROGMEM = { 1, 2, 5, 12, 25 };
+
+static void adjust_led_pwm()
+{
+    uint8_t timer = get_timer_value() & 0x3F;
+    if (timer != 1) {
+        // led adc is executed on timer == 0
+        return ;
+    }
+    uint16_t led_result = get_led_adc_result();
+    // 0 - 1.1 V reference
+    // means 1 is more or less 1 mV
+    // well, we are actually not on the light side of the force
+    // very small values for dark and medium lightening conditions
+    // very high values for bright ambient
+    // nothing in between
+
+    // add ADC conversion errors and we are doomed
+
+    // 0..1 mV - dark
+    // 3 mV - not dark
+    // 100 mV - light
+    // > 100 mV - sunny day
+    uint8_t mapped_led_result;
+    if (led_result <= 3) {
+        mapped_led_result = 0;
+    } else if (led_result <= 10) {
+        mapped_led_result = 1;
+    } else if (led_result <= 100) {
+        mapped_led_result = 2;
+    } else if (led_result <= 500) {
+        mapped_led_result = 3;
+    } else {
+        mapped_led_result = 4;
+    }
+    if (++led_buckets[mapped_led_result] == 52) {
+        // bucket overflows, it can happend every 10 seconds
+        memset(led_buckets, 0, sizeof(led_buckets));
+        //led_buckets[0] = led_buckets[1] = led_buckets[2] = led_buckets[3] = led_buckets[4] = 0;
+        uint8_t led_pwm_value = led_pwm_values[mapped_led_result];
+        set_led_pwm(led_pwm_value);
+    }
+}
+#endif // LED_PWM
+
+
 static inline void execute_state_transition_changes()
 {
     execute_engine_start_changes();
@@ -365,7 +420,9 @@ static inline void execute_state_transition_changes()
 static inline void adjust_pwm_values()
 {
     adjust_beam_pwm();
-    // TODO: adjust LED pwm
+    #ifdef LED_PWM
+    adjust_led_pwm();
+    #endif // LED_PWM
 }
 
 // do not store used registers on stack

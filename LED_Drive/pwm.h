@@ -24,8 +24,10 @@ static inline bool is_led_on() {
     return TCCR0A & _BV(COM0B1) ? true : false;
 }
 
-// ustawia diodę led na włączoną na zadany okres cyklu
-extern void set_led_pwm(uint8_t duty_cycle);
+// ustawia poziom mocy diody led
+static inline void set_led_pwm(uint8_t duty_cycle) {
+    OCR0B = duty_cycle;
+}
 
 // ustawia światła na włączone (100% mocy) lub wyłączone
 extern void set_beam_on_off(bool on);

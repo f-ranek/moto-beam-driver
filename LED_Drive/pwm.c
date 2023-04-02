@@ -41,8 +41,8 @@ void start_pwm()
     PORTB &= ~_BV(2);
     DDRB |= _BV(2);
 
-    // default LED duty cycle - 100%
-    OCR0B = 255;
+    // default LED duty cycle - 10%
+    OCR0B = 25;
 }
 
 static inline void disable_led_pwm() {
@@ -67,21 +67,6 @@ void set_led_off()
     PORTA &= ~_BV(7);
     // odłączyć PWM
     disable_led_pwm();
-}
-
-// ustawia diodę led na włączoną na zadany okres cyklu
-void set_led_pwm(uint8_t duty_cycle)
-{
-    //if (duty_cycle == 255) {
-    //    // wartość pinu 0
-    //    PORTA |= _BV(7); // ew. 5
-    //    // odłączyć PWM
-    //    disable_led_pwm();
-    //} else {
-        OCR0B = duty_cycle;
-        // podpięcie pod PA7
-        enable_led_pwm();
-    //}
 }
 
 static inline void disable_beam_pwm()
