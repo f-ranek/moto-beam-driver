@@ -258,15 +258,13 @@ static void execute_led_info_changes()
             }
             if (timer > ONE_SECOND_INTERVAL) {
                 current_led_status_value = LED_FOLLOW_BEAM;
-                set_led_off();
             } else {
                 set_led_on();
             }
             return ;
         case LED_INITIAL_FAST_BLINKING:
-           if (timer > 2*ONE_SECOND_INTERVAL-ONE_TENTH_SECOND_INTERVAL) { // TODO: here we have five blinks, and one very short blink
+           if (timer > 2*ONE_SECOND_INTERVAL-ONE_TENTH_SECOND_INTERVAL) { // without -1/10 sec here we have five blinks, and one very short blink
                 current_led_status_value = LED_FOLLOW_BEAM;
-                set_led_off();
             } else if (next_led_status_change_at == timer){
                 next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
                  if (is_led_on()) {
@@ -282,6 +280,7 @@ static void execute_led_info_changes()
 
     // TODO: this is too fucking hardcoded
     if (current_led_status_value != LED_FOLLOW_BEAM && next_led_status_change_at == timer) {
+        // we have blinking in progress, and it's blink change time
         if (is_led_on()) {
             set_led_off();
             if (current_led_status_value == LED_SLOW_BLINKING) {
@@ -307,6 +306,8 @@ static void execute_led_info_changes()
         // ADC is executed on (timer & 0x03) == 0x01, so we wait a little to get fresh results
         return ;
     }
+
+    // so we are in the state of LED_FOLLOW_BEAM
 
     uint16_t beam_value = get_beam_adc_result();
     beam_actual_status beam_status_value = map_beam(beam_value);
@@ -353,6 +354,7 @@ static void execute_led_info_changes()
             break;
     }
     if (target_led_status_value != LED_FOLLOW_BEAM && current_led_status_value == LED_FOLLOW_BEAM) {
+        // we are about to blink. schedule led blink time
         if (target_led_status_value == LED_CLOCK_BLINKING) {
             next_led_status_change_at = ONE_SECOND_INTERVAL + timer;
         } else {
