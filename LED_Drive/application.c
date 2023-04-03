@@ -237,7 +237,7 @@ typedef enum led_status_e {
     LED_FAST_BLINKING,
     // slow blinking, 1 Hz with 20% duty cycle (i.e. 200 ms on, 800 ms off)
     LED_SLOW_BLINKING,
-    // slow blinking, 0,5 Hz (i.e. 1 s on, 1 s off)
+    // slow blinking, 1 Hz with 50% duty cycle (i.e. 0,5 s on, 0,5 s off)
     LED_CLOCK_BLINKING,
     // on or off depending on beam status
     LED_FOLLOW_BEAM
@@ -247,6 +247,7 @@ static led_status current_led_status_value;
 static uint16_t next_led_status_change_at;
 
 // TODO: this is way too fucking hardcoded and complicated
+
 static void execute_led_info_changes()
 {
     uint16_t timer = get_timer_value();
@@ -294,7 +295,7 @@ static void execute_led_info_changes()
             set_led_on();
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
-        // override fo medium blinking, where timer is always 1/2 second
+        // override fo medium blinking, where timer is always 1 second
         if (current_led_status_value == LED_CLOCK_BLINKING) {
             next_led_status_change_at = HALF_A_SECOND_INTERVAL + timer;
         }
@@ -356,7 +357,7 @@ static void execute_led_info_changes()
     if (target_led_status_value != LED_FOLLOW_BEAM && current_led_status_value == LED_FOLLOW_BEAM) {
         // we are about to blink. schedule led blink time
         if (target_led_status_value == LED_CLOCK_BLINKING) {
-            next_led_status_change_at = ONE_SECOND_INTERVAL + timer;
+            next_led_status_change_at = HALF_A_SECOND_INTERVAL + timer;
         } else {
             next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
         }
