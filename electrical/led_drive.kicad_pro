@@ -178,9 +178,6 @@
   },
   "erc": {
     "erc_exclusions": [
-      "lib_symbol_issues|2527300|419100|ce3cbc6e-d67a-4214-87d9-0bfff0a733b4|00000000-0000-0000-0000-000000000000|||",
-      "lib_symbol_issues|533400|927100|eba0073d-0ecc-49a8-9ada-62bc6de9666c|00000000-0000-0000-0000-000000000000|||",
-      "multiple_net_names|762000|825500|61082ea5-dfb5-479b-af67-0d49faaf61d8|d0fc939a-6aa5-4b4f-a307-49199cf79eb7|||",
       "no_connect_dangling|1841500|774700|7444b834-bbe0-4348-9fa2-e70229684301|00000000-0000-0000-0000-000000000000|||",
       "no_connect_dangling|2146300|889000|bd242e11-5745-4379-827c-01789e56a9fe|00000000-0000-0000-0000-000000000000|||"
     ],
@@ -507,6 +504,10 @@
     [
       "bc381f99-814a-407f-b047-30e2660febd1",
       "Power module P"
+    ],
+    [
+      "0c65a6ac-9b7c-43de-8f27-03fd79afa39a",
+      "Power module wiring"
     ]
   ],
   "text_variables": {}

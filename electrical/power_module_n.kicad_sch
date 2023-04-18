@@ -5,6 +5,7 @@
   (paper "A4")
 
   (title_block
+    (title "Power module N")
     (date "2023-03-28")
   )
 

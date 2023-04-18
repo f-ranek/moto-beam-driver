@@ -13,6 +13,23 @@
 
 
 
+  (sheet (at 27.94 81.28) (size 43.18 29.21) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 0c65a6ac-9b7c-43de-8f27-03fd79afa39a)
+    (property "Sheetname" "Power module wiring" (at 27.94 80.5684 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "power_module_wiring.kicad_sch" (at 27.94 111.0746 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "led_drive"
+        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "6"))
+      )
+    )
+  )
+
   (sheet (at 80.01 35.56) (size 45.72 31.75) (fields_autoplaced)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0000))
