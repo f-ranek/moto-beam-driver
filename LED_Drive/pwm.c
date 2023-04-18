@@ -17,10 +17,10 @@
 // setup pwm module
 void start_pwm()
 {
+
     // Table 11-8. Waveform Generation Mode Bit Description
     // Fast PWM from 0 to 255
     // ew. Phase Correct PWM, wtedy częstotliwość jest 2 razy mniejsza...
-    // zweryfikować, jak wtedy działają bity COM0A1 i COM0A0
     TCCR0A = _BV(WGM01) | _BV(WGM00);
 
     // Table 11-9. Clock Select Bit Description
@@ -50,56 +50,3 @@ void start_pwm()
     OCR0B = 12;
 }
 
-// ustawia diodę LED na włączoną (PWM)
-void set_led_on()
-{
-    // włączyć PWM
-    // Table 11-6. Compare Output Mode, Fast PWM Mode
-    // Clear OC0B on Compare Match, set OC0B at BOTTOM
-    // (non-inverting mode)
-    TCCR0A |= _BV(COM0B1);
-}
-
-// ustawia diodę LED na wyłączoną
-void set_led_off()
-{
-    // wartość pinu 0
-    PORTA &= ~_BV(7);
-    // odłączyć PWM
-    TCCR0A &= ~_BV(COM0B1);
-}
-
-static inline void disable_beam_pwm()
-{
-    TCCR0A &= ~_BV(COM0A1);
-    set_beam_pwm(0);
-}
-
-// Table 11-3. Compare Output Mode, Fast PWM Mode
-// Clear OC0A on Compare Match
-// Set OC0A at BOTTOM (non-inverting mode)
-static inline void enable_beam_pwm()
-{
-    TCCR0A |= _BV(COM0A1);
-}
-
-// ustawia światła na włączone lub wyłączone
-void set_beam_on_off(bool on)
-{
-    // ustawienie wartości portu
-    if (on) {
-        PORTB |= _BV(2);
-    } else {
-        PORTB &= ~_BV(2);
-    }
-    // odpięcie PWM
-    disable_beam_pwm();
-}
-
-// ustawia światła na wybrany ułamek mocy
-void start_beam_pwm(uint8_t duty_cycle)
-{
-    set_beam_pwm(duty_cycle);
-    // aktywacja wyjścia PWM
-    enable_beam_pwm();
-} 

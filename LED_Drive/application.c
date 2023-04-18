@@ -105,7 +105,7 @@ static beam_status_change beam_status_changes;
             } else {
                 // we got 95% of power, go directly to 100%
                 beam_status_changes = BEAM_ON;
-                set_beam_on_off(1);
+                set_beam_on_off(true);
             }
             break;
         case BEAM_ON:
@@ -192,7 +192,7 @@ static void execute_engine_start_changes() {
         // jeżeli było WDR, to od razu idziemy do zapalonej
         if (was_unexpected_reset()) {
             beam_status_changes = BEAM_ON;
-            set_beam_on_off(1);
+            set_beam_on_off(true);
         } else {
             // launch beam brightening after wait
             beam_status_changes = BEAM_WAITING;
