@@ -497,16 +497,16 @@
       ""
     ],
     [
-      "bc381f99-814a-407f-b047-30e2660febd1",
-      "Power module P"
-    ],
-    [
       "111fb05e-7613-4dff-b0ef-7b688bb51755",
       "Driver module"
     ],
     [
       "8dbccfbf-0961-4856-9879-280cfe95837a",
       "Power module N"
+    ],
+    [
+      "bc381f99-814a-407f-b047-30e2660febd1",
+      "Power module P"
     ]
   ],
   "text_variables": {}
