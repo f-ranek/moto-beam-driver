@@ -73,6 +73,8 @@ Sterowanie rozjaśnianiem świateł realizowane jest za pomocą PWM (pulse width
 
 Testy wykazały, że przy częstotliwości PWM około 4 kHz (cykl 250 μs dla 50% wypełnienia) żarówka *piszczy* przez większość czasu jest rozświetlania, więc tranzystor jeszcze nie pracuje w obszarze liniowym, a w trybie przełączania mocy. Natomiast ostatecznie PWM pracuje z częstotliwością około 60 Hz, a żarówka nie piszczy.
 
+![Moduł mocy](electrical/power_module_n.png)
+
 ## Interfejsy z systemami motocykla
 
 ### Kabelkologia
@@ -84,13 +86,41 @@ Moduł mocy został wpięty w obwód żarówki świateł mijania za pomocą zł�
 1. Przed odpięciem tego złącza od motocykla należy najpierw rozpiąć wszystkie pozostałe złącza, bo tylko ono dostarcza nam masę do układu. Bez tego możemy uszkodzić układ.
 2. Ja zakupiłem takie złącza po okazyjnej cenie na pewnym dalekowschodnim portalu aukcyjnym. Natomiast kupując te złącza należy zwrócić uwagę, aby kupić nie tylko obudowę (*housing*), ale także PINy oraz uszczelnienia.
 
-Od strony motocykla w złączu świateł mamy zasilanie 12 V po bezpieczniku świateł mijania - kabelek w kolorze czarnym z niebieskim paskiem (B/Bl) - łączymy go z J5 układu, i jednocześnie przekazujemy dalej - na żarówkę. Kabelek w kolorze czarnym z białym paskiem (B/W) to standardowo masa, i tę masę łączymy z J11 układu. Natomiast J10 wyprowadzamy również na żarówkę
+Od strony motocykla w złączu świateł mamy zasilanie 12 V po bezpieczniku świateł mijania - kabelek w kolorze czarnym z niebieskim paskiem (B/Bl) - łączymy go z J5 układu, i jednocześnie przekazujemy dalej - na żarówkę. Kabelek w kolorze czarnym z białym paskiem (B/W) to standardowo masa, i tę masę łączymy z J11 układu. Natomiast J10 wyprowadzamy również na żarówkę.
+
+Pomocny może być poniższy schemat:
+
 ![Schemat połączeń](electrical/power_module_wiring.png)
 
 **UWAGI:** 
-1. Przed połączeniem czegokolwiek należy upewnić się, że na właściwych PINach motocykla mamy właściwe kabelki, czyli masę oraz zasilanie w odpowiednim miejscu. Montując wtyczkę niestety łatwo o błąd i zamianę pinów lewego z prawym, a taka zamiana spowoduje, że układ nie będzie nam działał.
-2. Przekazanie mocy na żarówkę należy wykonać kablami o przekroju co najmniej 0,75 mm kwadrat.
-3. Lutując przewody mocy do tranzystora najlepiej przylutować je bezpośrednio do nóżek, uważając przy tym, aby nie przegrzać tranzystora.
+
+1. Przed połączeniem czegokolwiek należy upewnić się, że na właściwych PINach motocykla mamy właściwe kabelki, czyli masę oraz zasilanie w odpowiednim miejscu. Tutaj po prostu włączamy zapłon i sprawdzamy, czy napięcie 12 V jest w tym miejscu, w którym chcemy. 
+Montując wtyczkę niestety łatwo o błąd i zamianę pinów lewego z prawym, a taka zamiana spowoduje, że układ nie będzie nam działał.
+2. Przekazanie mocy na żarówkę należy wykonać kablami o przekroju co najmniej 0,75 mm kwadrat. Odnogę zasilania (J5) można już puścić cieńszym kabelkiem.
+3. Lutując przewody mocy w układzie najlepiej przylutować je bezpośrednio do nóżek tranzystora, uważając przy tym, aby go nie przegrzać.
+
+Połączenie wykrywania zapłonu (J7), oraz uruchomienia rozrusznika (J8) zrealizowałem przez wlutowanie się w kabelki koło przekaźnika rozrusznika. Są to odpowiednio kolory biały z czerwonym paskiem (W/R) oraz czarny z żółtym paskiem (B/Y). Tutaj akurat wiele sprawdzać nie trzeba, bo ich zamiana została zaplanowana.
+
+Połączenie J4 - dodatkowe zasilanie, jest opcjonalne, ale bez niego układ nam nie wykryje przepalenia bezpiecznika świateł mijania. Ja podłączyłem się do kabelka w kolorze białym z zielonym paskiem (W/G) - pojawia się tam napięcie po przekręceniu kluczyka, zabezpieczone bezpiecznikiem SIGNAL.
+
+Połączenie J9 - wykrywanie biegu neutralnego. Kabelek niebieski z czarnym paskiem (Bl/B) - w momencie wrzucenia „luzu” jest zwierany do masy motocykla.
+
+Ja się wlutowałem w wiązkę w okolicach czachy motocykla.
+
+Przy okazji kabelki:
+* czarnym z białym paskiem (B/W) to standardowo masa,
+* czerwony z białym paskiem (R/W) to zasilanie dostępne nawet po wyjęciu kluczyka. Zabezpieczone bezpiecznikiem FUEL.
+
+**UWAGI**
+
+Przed przylutowaniem czegokolwiek najpierw sprawdź, czy to na pewno dobry kabelek, i czy „zachowuje się” zgodnie z oczekiwaniami.
+
+Wszystkie testy prowadź w takie sposób, że:
+1. odłączasz ECM (dwie wtyczki) oraz zegary (jedna wtyczka) - jak coś spieprzysz, to najwyżej wyleci bezpiecznik,
+2. minus miernika łączysz z masą motocykla, plus z punktem, który chcesz sprawdzić,
+3. znajdź cieniutki, ale bardzo cieniutki stalowy drucik (ja mam taki ze sprężynki), i wsuwaj go do gniazda, np. po odpięciu zegarów,
+4. odsuwając gumową osłonę wtyczki zegarów można sprawdzić kolory kabelków,
+5. jeżeli sprawdzasz napięcie w obwodzie, sprawdź również, czy po przekręceniu kluczyka znika (bądź nie), oraz czy po wyjęciu odpowiedniego bezpiecznika znika.
 
 ### Inżynieria
 
@@ -101,6 +131,8 @@ Zastosowany został zatem transil D10, którego celem jest ograniczenie przepię
 W przypadku rozłączenia kill switch (SW4), na złączu J7 pojawi się impuls ujemnego napięcia, który powinien zostać jak poprzednio ograniczony przez D10, oraz zablokowany przez D7.
 
 Zastosowanie symetrycznego wejścia J7/J8 pozwala za to nie przejmować się sposobem podłączenia układu do motocykla.
+
+![Moguł główny](electrical/uc_module.png)
 
 # Programowanie
 
