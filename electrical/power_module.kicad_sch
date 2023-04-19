@@ -425,7 +425,7 @@
         )
       )
     )
-    (symbol "Transistor_BJT:BC547" (pin_names (offset 0) hide) (in_bom yes) (on_board yes)
+    (symbol "Transistor_BJT:BC547" (pin_numbers hide) (pin_names (offset 0) hide) (in_bom yes) (on_board yes)
       (property "Reference" "Q" (at 5.08 1.905 0)
         (effects (font (size 1.27 1.27)) (justify left))
       )
@@ -1123,7 +1123,7 @@
           (reference "J3") (unit 1)
         )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "J2") (unit 1)
+          (reference "J1") (unit 1)
         )
       )
     )
@@ -1310,7 +1310,7 @@
           (reference "J2") (unit 1)
         )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "J1") (unit 1)
+          (reference "J2") (unit 1)
         )
       )
     )
@@ -1339,7 +1339,7 @@
           (reference "F1") (unit 1)
         )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "F2") (unit 1)
+          (reference "F6") (unit 1)
         )
       )
     )

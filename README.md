@@ -1,3 +1,4 @@
+
 # Cel projektu
 
 Proste urządzenie, które wyłączy światła mijania, gdy nie są potrzebne.
@@ -63,11 +64,11 @@ Do domyślnej konfiguracji mikrokontrolera zostały wprowadzone następujące zm
 
 ## Moduł mocy
 
-Moduł mocy oparty jest o tranzystor MOSFET IRF540N. Pozwala on na sterowanie prądem do 33 A przy oporności załączonego tranzystora 44 mΩ. Teoretycznie więc można podpiąć nie tylko światła mijania, ale także światła drogowe, chociaż ja się na to nie zdecydowałem, żeby mieć zawsze możliwość ich włączenia.
+Moduł mocy oparty jest o tranzystor Q5 MOSFET IRF540N. Pozwala on na sterowanie prądem do 33 A przy oporności załączonego tranzystora 44 mΩ. Teoretycznie więc można podpiąć nie tylko światła mijania, ale także światła drogowe, chociaż ja się na to nie zdecydowałem, żeby mieć zawsze możliwość ich włączenia.
 
 Na testach okazało się, że dla żarówki 55 W zasilanej z akumulatora (około 12,6 V) na tranzystorze jest spadek napięcia odpowiadający oporności około 66 mΩ, co powoduje straty mocy rzędu 1,5 W. Wg danych producenta, *Junction-to-Ambient Thermal Resistance* to 62 °C/W, więc tranzystor bez radiatora będzie się grzał do temperatury około 26 °C (temperatura otocznia) + 62 x 1,5 ≈ 120 °C, co nie przekracza dopuszczalnej temperatury pracy 175 °C. Pomimo tego zdecydowałem się zastosować radiator - metalową płytkę o rozmiarach około 8 mm x 5 cm. Przy takim radiatorze temperatura tranzystora nie przekraczała 50 °C.
 
-Sterowanie tranzystora jest zrealizowane za pomocą wzmacniacza i adaptera poziomu TTL (5 V) do 12 V zbudowanego na tranzystorach Q3 i Q5 (swoją drogą, czemu taka niespójna numeracja). Ładowanie bramki odbywa się przez nasycenie tranzystora Q5, a rozładowanie przez opornik R7, przez który stale płynie prąd o natężeniu około 4 mA. W przypadku braku napięcia sterującego bazą któregokolwiek z tranzystorów Q3 i Q5, tranzystor mocy Q4 zostaje odcięty - światła **nie** świecą.
+Sterowanie tranzystora Q5 jest zrealizowane za pomocą wzmacniacza i adaptera poziomu TTL (5 V) do 12 V zbudowanego na tranzystorach Q3 i Q4. Ładowanie bramki odbywa się przez nasycenie tranzystora Q4, a rozładowanie przez opornik R7, przez który stale płynie prąd o natężeniu około 4 mA. W przypadku braku napięcia sterującego bazą któregokolwiek z tranzystorów Q3 i Q4, tranzystor mocy Q5 zostaje odcięty - światła **nie** świecą.
 
 Sterowanie rozjaśnianiem świateł realizowane jest za pomocą PWM (pulse width modulation). Wg dokumentacji producenta tranzystora (polecam artykuł **Power MOSFET Basics** *By Vrej Barkhordarian, International Rectifier, El Segundo, Ca.*) czas potrzebny na przeładowanie bramki można oszacować ze wzoru *Q = time x current*, gdzie Q to *Total gate charge*, np. dla ładunku bramki 20 nC, aby przełączyć tranzystor w ciągu 20 μs potrzeba prądu 1 mA. W przypadku użytego tranzystora Q = 71 nC, Ig = 4 mA, więc czas przełączenia to 17,5 μs. Oczywiście pomijam tu fakt, że spadające napięcie bramki spowoduje zmniejszenie natężenia prądu jej rozładowywania, a tym samym zwiększenie czasu potrzebnego na przełączenia tranzystora, a co gorsza - pracę tranzystora w obszarze liniowym, i duże straty mocy na tranzystorze. Ogólnie nie jest to problem, bo podczas normalnej pracy tranzystor zawsze jest załączony, a czas, w którym działa jako przełącznik dla PWM jest mocno ograniczony.
 
@@ -86,7 +87,7 @@ Moduł mocy został wpięty w obwód żarówki świateł mijania za pomocą zł�
 1. Przed odpięciem tego złącza od motocykla należy najpierw rozpiąć wszystkie pozostałe złącza, bo tylko ono dostarcza nam masę do układu. Bez tego możemy uszkodzić układ.
 2. Ja zakupiłem takie złącza po okazyjnej cenie na pewnym dalekowschodnim portalu aukcyjnym. Natomiast kupując te złącza należy zwrócić uwagę, aby kupić nie tylko obudowę (*housing*), ale także PINy oraz uszczelnienia.
 
-Od strony motocykla w złączu świateł mamy zasilanie 12 V po bezpieczniku świateł mijania - kabelek w kolorze czarnym z niebieskim paskiem (B/Bl) - łączymy go z J5 układu, i jednocześnie przekazujemy dalej - na żarówkę. Kabelek w kolorze czarnym z białym paskiem (B/W) to standardowo masa, i tę masę łączymy z J11 układu. Natomiast J10 wyprowadzamy również na żarówkę.
+Od strony motocykla w złączu świateł mamy zasilanie 12 V po bezpieczniku świateł mijania - kabelek w kolorze czarnym z niebieskim paskiem (B/Bl) - łączymy go z J5 układu, i jednocześnie przekazujemy dalej - na żarówkę. Kabelek w kolorze czarnym z białym paskiem (B/W) to standardowo masa, i tę masę łączymy z J1 układu. Natomiast J10 wyprowadzamy na żarówkę.
 
 Pomocny może być poniższy schemat:
 
@@ -132,6 +133,8 @@ W przypadku rozłączenia kill switch (SW4), na złączu J7 pojawi się impuls u
 
 Zastosowanie symetrycznego wejścia J7/J8 pozwala za to nie przejmować się sposobem podłączenia układu do motocykla.
 
+![Interfejsy](electrical/interface_module.png)
+
 ![Moguł główny](electrical/uc_module.png)
 
 # Programowanie
@@ -139,9 +142,9 @@ Zastosowanie symetrycznego wejścia J7/J8 pozwala za to nie przejmować się spo
 Ja korzystam po taniości z płytki Arduino połączonej z mikrokontrolerem, oraz _skeczu_ ArduinoISP dostępnego w ArduinoIDE.
 Programowanie mikrokontrolera odbywa się przez `avrdude`, i np. żeby wejść w tryb interaktywny, należy wydać polecenie: `avrdude -v -p attiny84 -c arduino -P COM6 -b 19200 -t`, gdzie `COM6` oznacza nr portu, pod którym zarejestrowała się płytka Arduino podpięta do komputera.
 
-Programowanie _fuse bit_ można wykonać wydając polecenie (w trybie interaktywnym `avrdude`):
-`write lfuse 0 0x42`
-`write hfuse 0 0xCC`
+Programowanie _fuse bit_ można wykonać wydając polecenie (w trybie interaktywnym `avrdude`):  
+`write lfuse 0 0x42`  
+`write hfuse 0 0xCC`  
 
 
 # Oprogramowanie
