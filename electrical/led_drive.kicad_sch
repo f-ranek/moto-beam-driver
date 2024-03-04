@@ -6,6 +6,7 @@
 
   (title_block
     (title "Bulb drive")
+    (date "2023-04-19")
   )
 
   (lib_symbols
@@ -47,6 +48,23 @@
     )
   )
 
+  (sheet (at 27.94 35.56) (size 45.72 31.75) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0000))
+    (uuid 5b3d980a-93eb-45cc-b873-850f2d2e8df8)
+    (property "Sheetname" "Power delivery module" (at 27.94 34.8484 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheetfile" "power_delivery_module.kicad_sch" (at 27.94 67.8946 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+    (instances
+      (project "led_drive"
+        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "5"))
+      )
+    )
+  )
+
   (sheet (at 144.78 39.37) (size 36.83 29.21) (fields_autoplaced)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0000))
@@ -60,23 +78,6 @@
     (instances
       (project "led_drive"
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "4"))
-      )
-    )
-  )
-
-  (sheet (at 26.67 34.29) (size 44.45 33.02) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid bc381f99-814a-407f-b047-30e2660febd1)
-    (property "Sheetname" "Power module P" (at 26.67 33.5784 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "power_module.kicad_sch" (at 26.67 67.8946 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "5"))
       )
     )
   )

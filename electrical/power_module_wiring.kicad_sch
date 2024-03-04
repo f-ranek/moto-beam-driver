@@ -410,6 +410,7 @@
     )
   )
 
+
   (junction (at 80.01 67.31) (diameter 0) (color 0 0 0 0)
     (uuid f45c277d-6e1d-45e2-afa9-f9bae4e47db6)
   )
@@ -512,7 +513,7 @@
     (uuid f9733853-b345-4052-83b8-e823d306b776)
   )
 
-  (label "Low Beam Power" (at 45.72 62.23 0) (fields_autoplaced)
+  (label "LO Beam Power" (at 45.72 62.23 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid e88c02c7-1a7a-47fa-ab2e-7954b6234f84)
     (property "Color" "B/Bl" (at 45.72 63.5 0) (show_name)
@@ -547,9 +548,6 @@
       (project "led_drive"
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
           (reference "J1") (unit 1)
-        )
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "J3") (unit 1)
         )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/8dbccfbf-0961-4856-9879-280cfe95837a"
           (reference "J5") (unit 1)
@@ -632,9 +630,6 @@
     (pin "2" (uuid aabf9202-774c-4a2a-8bd1-d8590004dd93))
     (instances
       (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "B1") (unit 1)
-        )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/8dbccfbf-0961-4856-9879-280cfe95837a"
           (reference "B2") (unit 1)
         )
@@ -666,9 +661,6 @@
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
           (reference "J3") (unit 1)
         )
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "J2") (unit 1)
-        )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/8dbccfbf-0961-4856-9879-280cfe95837a"
           (reference "J11") (unit 1)
         )
@@ -699,9 +691,6 @@
       (project "led_drive"
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
           (reference "J3") (unit 1)
-        )
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/bc381f99-814a-407f-b047-30e2660febd1"
-          (reference "J2") (unit 1)
         )
         (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1/8dbccfbf-0961-4856-9879-280cfe95837a"
           (reference "J11") (unit 1)
