@@ -9,12 +9,15 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AVR = Debug|AVR
 		Release|AVR = Release|AVR
+		Simulation|AVR = Simulation|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Debug|AVR.ActiveCfg = Debug|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Debug|AVR.Build.0 = Debug|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Release|AVR.ActiveCfg = Release|AVR
 		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Release|AVR.Build.0 = Release|AVR
+		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Simulation|AVR.ActiveCfg = Simulation|AVR
+		{3E0689E5-5D0E-41A4-8F02-D7570E336C99}.Simulation|AVR.Build.0 = Simulation|AVR
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

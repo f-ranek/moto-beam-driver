@@ -17,9 +17,10 @@ void setup_timer_3ms()
     // enable interrupt on compare/match
     TIMSK1 |= _BV(OCIE1A);
     // count to 374 - magic value calculated from 1MHz timer and /8 prescaler
+    // count to 1499 - magic value calculated from 4MHz timer and /8 prescaler
     // count to 374 - magic value calculated from 8MHz timer and /64 prescaler
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
-    OCR1A = 374;
+    OCR1A = 1499;
 
     // start counter
 
@@ -30,7 +31,7 @@ void setup_timer_3ms()
     // 011 - /64
     // 100 - /256
     // 101 - /1024
-    TCCR1B = _BV(WGM12) | _BV(CS11) | _BV(CS10);
+    TCCR1B = _BV(WGM12) | _BV(CS11);
 }
 
 // maks 196 sekund

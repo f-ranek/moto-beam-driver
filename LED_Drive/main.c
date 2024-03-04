@@ -21,6 +21,24 @@
 // setup initial device status
 static inline void setup_initial_port_status();
 
+#ifdef SIMULATION
+
+// perform periodic application logic
+extern void loop_application_logic();
+
+int main(void)
+{
+    setup_initial_port_status();
+    start_pwm();
+
+    while (1)
+    {
+        loop_application_logic();
+        ++__timer_3ms_counter;
+        wdt_reset();
+    }
+}
+#else // !SIMULATION
 int main(void)
 {
     setup_initial_port_status();
@@ -34,6 +52,7 @@ int main(void)
         sleep_cpu();
     }
 }
+#endif // SIMULATION
 
 void setup_initial_port_status() {
     // Analog Comparator Disable
@@ -42,23 +61,32 @@ void setup_initial_port_status() {
     // input && internal pullup
     DDRA = _BV(7);
     // 0 - WE przycisk
-    // 1 - WE luz
-    PORTA = _BV(0) | _BV(1)
+    PORTA = _BV(0)
         // io ports used for SPI
         | _BV(4) | _BV(5) | _BV(6);
 
     // Digital Input Disable Register 0
-    // 2 - WE led
+    // 1 - WE czujnik zmierzchu
+    // 2 - WE aku
     // 3 - WE sensor świateł
     // 7 - WY led
-    DIDR0 = _BV(2) | _BV(3) | _BV(7);
+    DIDR0 = _BV(1) | _BV(2) | _BV(3) | _BV(7);
 
-    // 0 - WE zapłon
-    // 1 - WE rozrusznik
+    // 0 - WE olej
+    // 1 - WE luz
     // 2 - WY światła
     // 3 - WE reset
     DDRB = _BV(2);
-    PORTB = _BV(3);
+    PORTB = _BV(0) | _BV(2) | _BV(1) | _BV(3);
+
+
+    // SPI WIP
+    // 4 - SCK
+    // 5 - DO - data out
+    // 6 - DI - data in
+    DDRA |= _BV(4) | _BV(5);
+    PORTA &= ~(_BV(4) | _BV(5));
+
 }
 
 void initial_setup() __attribute__((naked, used, section(".init3")));

@@ -43,7 +43,7 @@ void start_pwm()
     DDRA |= _BV(7);
 
     // port świateł jako wyjście
-    PORTB &= ~_BV(2);
+    PORTB |= _BV(2);
     DDRB |= _BV(2);
 
     // default LED duty cycle - 5%

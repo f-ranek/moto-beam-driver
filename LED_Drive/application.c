@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "main.h"
 
+/*
 typedef enum beam_actual_status_e {
     // blisko zero V, przepalona żarówka lub bezpiczenik
     BEAM_VOLTAGE_ZERO,
@@ -28,6 +29,7 @@ typedef enum beam_actual_status_e {
 
     BEAM_VOLTAGE_UNKNOWN_READING
 } beam_actual_status;
+*/
 
 static inline bool was_unexpected_reset() {
     uint8_t reset_flags = _BV(WDRF)
@@ -36,6 +38,7 @@ static inline bool was_unexpected_reset() {
     return ( MCUSR_initial_copy & reset_flags ) != 0;
 }
 
+/*
 static inline void setup_adc()
 {
     uint8_t timer = get_timer_value();
@@ -86,7 +89,7 @@ static beam_status_change beam_status_changes;
 // we need to advance every 7th cycle
 #define BEAM_BRIGHTENING_INTERVAL (uint8_t)( FIVE_SECONDS_INTERVAL / ( 256 - 2 * BEAM_PWM_MARGIN ))
 
- static void adjust_beam_pwm() {
+static void adjust_beam_pwm() {
     uint16_t timer =  get_timer_value();
     if (next_beam_status_change_at != timer) {
         return ;
@@ -366,63 +369,74 @@ static void execute_led_info_changes()
     current_led_status_value = target_led_status_value;
 }
 
-#ifdef LED_ADC
-static uint8_t led_buckets[5];
-// static const uint8_t led_pwm_values[5] PROGMEM = { 10, 20, 50, 120, 255 };
-// static const uint8_t led_pwm_values[5] PROGMEM = { 1, 2, 5, 12, 25 };
 
-static const uint8_t led_pwm_values[5] PROGMEM = { 1, 4, 16, 64, 255 };
+*/
 
-
-static void adjust_led_pwm()
-{
-    if (!exchange_led_adc_result_available()) {
-        return ;
-    }
-    uint16_t led_result = get_led_adc_result();
-    // 0 - 1.1 V reference
-    // means 1 is more or less 1 mV
-    // well, we are actually not on the light side of the force
-    // very small values for dark and medium lightening conditions
-    // very high values for bright ambient
-    // nothing in between
-
-    // add ADC conversion errors and we are doomed
-
-    // 0..1 mV - dark
-    // 3 mV - not dark
-    // 100 mV - light
-    // > 100 mV - sunny day
-    uint8_t mapped_led_result;
-    if (led_result <= 3) {
-        mapped_led_result = 0;
-    } else if (led_result <= 10) {
-        mapped_led_result = 1;
-    } else if (led_result <= 100) {
-        mapped_led_result = 2;
-    } else if (led_result <= 500) {
-        mapped_led_result = 3;
-    } else {
-        mapped_led_result = 4;
-    }
-
-    // TODO: using 1 actually disables buckets
-    if (++led_buckets[mapped_led_result] == 1) {
-        // bucket overflows, it can happend every 10 seconds -- XXX
-        memset(led_buckets, 0, sizeof(led_buckets));
-        //led_buckets[0] = led_buckets[1] = led_buckets[2] = led_buckets[3] = led_buckets[4] = 0;
-        uint8_t led_pwm_value = led_pwm_values[mapped_led_result];
-        set_led_pwm(led_pwm_value);
-    }
-}
-#endif // LED_ADC
-
+static uint8_t my_state;
+static uint8_t ctr = 0x92;
 
 static inline void execute_state_transition_changes()
 {
-    execute_engine_start_changes();
-    execute_led_info_changes();
+    //execute_engine_start_changes();
+    //execute_led_info_changes();
+    if (exchange_button_release_flag()) {
+        PORTA ^= _BV(7);
+
+        my_state++;
+        if (my_state == 11) {
+            set_beam_on_off(false);
+            my_state = 0;
+            } else if (my_state == 1) {
+            start_beam_pwm(25);
+            } else if (my_state == 10) {
+            set_beam_on_off(true);
+            } else {
+            set_beam_pwm(my_state*25);
+        }
+        ctr++;
+    }
+
+    // SPI WIP
+
+    USIDR = ctr;
+    const uint8_t low  = _BV(USIWM0)|_BV(USITC);
+    const uint8_t high = _BV(USIWM0)|_BV(USITC)|_BV(USICLK);
+    // 8 times
+    __asm__ __volatile__ (
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        "out %[USICR_], %[low_]"            "\n"
+        "out %[USICR_], %[high_]"           "\n"
+        :
+        : [low_]                "r" (low),
+          [high_]               "r" (high),
+          [USICR_]              "I" (_SFR_IO_ADDR(USICR))
+    );
+
+    USICR = 0;
+
+    /*
+    if (is_led_on()) {
+        set_led_off();
+    }
+    PORTA &= ~_BV(7);
+    PORTA |= _BV(7);
+    PORTA &= ~_BV(7);
+    */
 }
+/*
 
 static inline void adjust_pwm_values()
 {
@@ -430,18 +444,22 @@ static inline void adjust_pwm_values()
     #ifdef LED_ADC
     adjust_led_pwm();
     #endif // LED_ADC
-}
+}*/
+
+#ifndef SIMULATION
 
 // do not store used registers on stack
 void loop_application_logic(void)
     __attribute__((OS_main));
 
+#endif
+
 inline void loop_application_logic()
 {
     read_pin_values();
     execute_state_transition_changes();
-    adjust_pwm_values();
-    setup_adc();
+    //adjust_pwm_values();
+    //setup_adc();
     // was_unexpected_reset must return true (if should)
     // for some time after system start
     // until PINs reading stabilise

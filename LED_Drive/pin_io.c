@@ -11,13 +11,11 @@
 #include "pin_io.h"
 
 // PA0 - przycisk, zwolniony = 1 , wduszony = 0
-// PA1 - luz = 0, bieg = 1
-// PB0 - zapłon
-// PB1 - rozrusznik
+// PB0 - olej, brak ciśnienia = 0, jest = 1
+// PB1 - luz = 0, bieg = 1
 
 __pin_status __button_status;
-__pin_status __ignition_starter_status;
-__pin_status __neutral_status;
+__pin_status __motorcycle_status;
 
 static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles);
 static inline void read_button_value();
@@ -26,21 +24,19 @@ void read_pin_values()
 {
     read_button_value();
 
-    uint8_t neutral_reading = bit_is_set(PINA, 1) ? 1 : 0;
-    update_pin_status(&__neutral_status, neutral_reading, 3);
-
-    uint8_t ignition_starter_reading = PINB & (_BV(0)|_BV(1));
-    update_pin_status(&__ignition_starter_status, ignition_starter_reading, 3); // ~9 ms
+    uint8_t motorcycle_status_reading = PINB & (_BV(0)|_BV(1));
+    update_pin_status(&__motorcycle_status, motorcycle_status_reading, 9); // ~27 ms
 }
 
 static inline void read_button_value()
 {
     // wduszony - PIN = 0
-    bool button_reading = bit_is_set(PINA, 0) ? 0 : 1;
-    update_pin_status(&__button_status, button_reading, 15); // ~45 ms
     bool last_button_status = __button_status.curr_status;
+    bool button_reading = bit_is_set(PINA, 0) ? false : true;
+    update_pin_status(&__button_status, button_reading, button_reading ? 15 : 5); // ~45 przy wciskaniu / 15 ms przy zwalnianiu
+    bool new_button_status = __button_status.curr_status;
     // czy poprzednio był wduszony, a teraz jest zwolniony?
-    if (last_button_status && button_reading == 0) {
+    if (last_button_status && !new_button_status) {
         __button_interrupt_pending |= _BV(0);
     }
 }

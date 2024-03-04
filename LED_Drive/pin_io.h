@@ -22,23 +22,24 @@ typedef struct __pin_status_s {
 } __pin_status;
 
 extern __pin_status __button_status;
-extern __pin_status __ignition_starter_status;
-extern __pin_status __neutral_status;
+extern __pin_status __motorcycle_status;
 
 // bit 0 - czy mamy przerwanie od przycisku
 // bit 1 - czy następne przerwanie należy zignorować
 #define __button_interrupt_pending GPIOR0
 
-// zwraca dwa bity opisujące stan wejść zapłonu oraz rozrusznika
-static inline uint8_t get_ignition_starter_status() {
-    return __ignition_starter_status.curr_status;
+// zwraca bit opisujący stan ciśnienia oleju
+// 0 -> brak ciśnienia
+// 1 -> jest ciśnienie
+static inline bool is_oli_pressure() {
+    return (bool)((__motorcycle_status.curr_status & _BV(0)) != 0);
 }
 
-// zwraca jeden bit opisujący stan wejścia biegu neutralnego
+// zwraca bit opisujący stan wejścia biegu neutralnego
 // 0 -> bieg neutralny
 // 1 -> dowolny inny bieg
 static inline bool is_gear_engaged() {
-    return (bool)(__neutral_status.curr_status);
+    return (bool)((__motorcycle_status.curr_status & _BV(1)) != 0);
 }
 
 // zwraca oraz resetuje flagę informującą o zwolnieniu przycisku
