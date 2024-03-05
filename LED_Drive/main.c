@@ -58,12 +58,16 @@ void setup_initial_port_status() {
     // Analog Comparator Disable
     ACSR |= _BV(ACD);
 
-    // input && internal pullup
-    DDRA = _BV(7);
     // 0 - WE przycisk
-    PORTA = _BV(0)
-        // io ports used for SPI
-        | _BV(4) | _BV(5) | _BV(6);
+    // SPI interface
+    // 4 - SCK
+    // 5 - DO - data out
+    // 6 - DI - data in
+
+    // bit 1 to mark as output
+    DDRA = _BV(4) | _BV(5) | _BV(7);
+    // bit 1 to enable internal pullup on input, OUT on output
+    PORTA = _BV(0) | _BV(6);
 
     // Digital Input Disable Register 0
     // 1 - WE czujnik zmierzchu
@@ -76,17 +80,11 @@ void setup_initial_port_status() {
     // 1 - WE luz
     // 2 - WY światła
     // 3 - WE reset
+
+    // enable pull-up for bits 0 and 1
+    PORTB = _BV(0) | _BV(1) | _BV(2);
+    // mark bit 2 as output, it will have 1 on the pin
     DDRB = _BV(2);
-    PORTB = _BV(0) | _BV(2) | _BV(1) | _BV(3);
-
-
-    // SPI WIP
-    // 4 - SCK
-    // 5 - DO - data out
-    // 6 - DI - data in
-    DDRA |= _BV(4) | _BV(5);
-    PORTA &= ~(_BV(4) | _BV(5));
-
 }
 
 void initial_setup() __attribute__((naked, used, section(".init3")));

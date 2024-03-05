@@ -377,21 +377,23 @@ static uint8_t ctr = 0x92;
 
 static inline void execute_state_transition_changes()
 {
+    // toogle pin output
+    PINA |= _BV(7);
+
     //execute_engine_start_changes();
     //execute_led_info_changes();
     if (exchange_button_release_flag()) {
-        PORTA ^= _BV(7);
 
         my_state++;
-        if (my_state == 11) {
+        if (my_state == 51) {
             set_beam_on_off(false);
             my_state = 0;
-            } else if (my_state == 1) {
-            start_beam_pwm(25);
-            } else if (my_state == 10) {
+        } else if (my_state == 1) {
+            start_beam_pwm(5);
+        } else if (my_state == 50) {
             set_beam_on_off(true);
-            } else {
-            set_beam_pwm(my_state*25);
+        } else {
+            set_beam_pwm(my_state*5);
         }
         ctr++;
     }

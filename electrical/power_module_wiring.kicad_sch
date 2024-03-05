@@ -614,7 +614,7 @@
   (symbol (lib_id "Device:Lamp") (at 113.03 68.58 0) (unit 1)
     (in_bom no) (on_board no) (dnp no) (fields_autoplaced)
     (uuid 8285df7a-0836-4b9f-99b7-8789a5d7ac3b)
-    (property "Reference" "B1" (at 116.84 67.945 0)
+    (property "Reference" "B2" (at 116.84 67.945 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "55W" (at 116.84 70.485 0)
