@@ -17,18 +17,18 @@
 #include "main.h"
 
 /*
-typedef enum beam_actual_status_e {
+typedef enum bulb_actual_status_e {
     // blisko zero V, przepalona żarówka lub bezpiczenik
-    BEAM_VOLTAGE_ZERO,
+    BULB_VOLTAGE_ZERO,
 
     // około 200 mV (100 - 500), normalna praca
-    BEAM_VOLTAGE_UNDER_LOAD,
+    BULB_VOLTAGE_UNDER_LOAD,
 
     // powyżej 4 V, wszystko ok, żarówka wyłączona
-    BEAM_VOLTAGE_FULL,
+    BULB_VOLTAGE_FULL,
 
-    BEAM_VOLTAGE_UNKNOWN_READING
-} beam_actual_status;
+    BULB_VOLTAGE_UNKNOWN_READING
+} bulb_actual_status;
 */
 
 static inline bool was_unexpected_reset() {
@@ -50,23 +50,23 @@ static inline void setup_adc()
     #endif // LED_ADC
     if ((timer & 0x03) == 1) {
         // every 4 ticks = 12 ms
-        launch_beam_adc();
+        launch_bulb_adc();
     }
 }
 
-typedef enum beam_status_change_e {
-    // the beam is off
-    BEAM_OFF,
+typedef enum bulb_status_change_e {
+    // the bulb is off
+    BULB_OFF,
     // in quiet period before starting lightening
-    BEAM_WAITING,
+    BULB_WAITING,
     // bean is getting brighter and brighter :)
-    BEAM_BRIGHTENING,
-    // beam is fully on
-    BEAM_ON
-} beam_status_change;
+    BULB_BRIGHTENING,
+    // bulb is fully on
+    BULB_ON
+} bulb_status_change;
 
-static uint16_t next_beam_status_change_at;
-static beam_status_change beam_status_changes;
+static uint16_t next_bulb_status_change_at;
+static bulb_status_change bulb_status_changes;
 
 // 1 second in 3ms ticks
 #define ONE_SECOND_INTERVAL ((uint16_t)(1000 / 3))
@@ -80,40 +80,40 @@ static beam_status_change beam_status_changes;
 #define HALF_A_SECOND_INTERVAL ((uint16_t)(500 / 3))
 #define ONE_TENTH_SECOND_INTERVAL ((uint16_t)(100 / 3))
 
-// no less that 5% of beam power, no more than 95% of beam power (except 100%)
-# define BEAM_PWM_MARGIN ((uint8_t)(256 * 5 / 100))
-# define BEAM_PWM_MARGIN_END ((uint8_t)(256 - BEAM_PWM_MARGIN))
+// no less that 5% of bulb power, no more than 95% of bulb power (except 100%)
+# define BULB_PWM_MARGIN ((uint8_t)(256 * 5 / 100))
+# define BULB_PWM_MARGIN_END ((uint8_t)(256 - BULB_PWM_MARGIN))
 
 // 225 - 2x 13 = 229 values to go throught while brightening
 // to stretch it over 5 seconds with 3ms intervals
 // we need to advance every 7th cycle
-#define BEAM_BRIGHTENING_INTERVAL (uint8_t)( FIVE_SECONDS_INTERVAL / ( 256 - 2 * BEAM_PWM_MARGIN ))
+#define BULB_BRIGHTENING_INTERVAL (uint8_t)( FIVE_SECONDS_INTERVAL / ( 256 - 2 * BULB_PWM_MARGIN ))
 
-static void adjust_beam_pwm() {
+static void adjust_bulb_pwm() {
     uint16_t timer =  get_timer_value();
-    if (next_beam_status_change_at != timer) {
+    if (next_bulb_status_change_at != timer) {
         return ;
     }
-    switch (beam_status_changes) {
-        case BEAM_WAITING:
+    switch (bulb_status_changes) {
+        case BULB_WAITING:
             // waiting expired, start brightening
-            start_beam_pwm(BEAM_PWM_MARGIN); // power 5%
-            next_beam_status_change_at = BEAM_BRIGHTENING_INTERVAL + timer;
-            beam_status_changes = BEAM_BRIGHTENING;
+            start_bulb_pwm(BULB_PWM_MARGIN); // power 5%
+            next_bulb_status_change_at = BULB_BRIGHTENING_INTERVAL + timer;
+            bulb_status_changes = BULB_BRIGHTENING;
             break;
-        case BEAM_BRIGHTENING:
-            if (get_beam_pwm_duty_cycle() < BEAM_PWM_MARGIN_END) {
-                next_beam_status_change_at = BEAM_BRIGHTENING_INTERVAL + timer;
-                set_beam_pwm(get_beam_pwm_duty_cycle() + 1);
+        case BULB_BRIGHTENING:
+            if (get_bulb_pwm_duty_cycle() < BULB_PWM_MARGIN_END) {
+                next_bulb_status_change_at = BULB_BRIGHTENING_INTERVAL + timer;
+                set_bulb_pwm(get_bulb_pwm_duty_cycle() + 1);
             } else {
                 // we got 95% of power, go directly to 100%
-                beam_status_changes = BEAM_ON;
-                set_beam_on_off(true);
+                bulb_status_changes = BULB_ON;
+                set_bulb_on_off(true);
             }
             break;
-        case BEAM_ON:
+        case BULB_ON:
             break;
-        case BEAM_OFF:
+        case BULB_OFF:
             break;
     }
 }
@@ -140,28 +140,28 @@ static inline engine_start_status get_engine_start_status() {
 
 static engine_start_status last_engine_start_status;
 static bool gear_was_ever_engaged;
-static bool beam_state;
-static bool force_beam_off;
+static bool bulb_state;
+static bool force_bulb_off;
 
 static void execute_engine_start_changes() {
     engine_start_status current_engine_start_status = get_engine_start_status();
-    bool target_beam_status;
+    bool target_bulb_status;
 
     switch (current_engine_start_status) {
         case STARTER_CRANKING:
-            target_beam_status = false;
+            target_bulb_status = false;
             // ignore button actions
             exchange_button_release_flag();
             break;
         case NO_IGNITION:
             if (last_engine_start_status != NO_IGNITION) {
-                beam_state = false;
+                bulb_state = false;
             }
             if (exchange_button_release_flag()) {
-                beam_state = !beam_state;
+                bulb_state = !bulb_state;
             }
-            force_beam_off = false;
-            target_beam_status = beam_state;
+            force_bulb_off = false;
+            target_bulb_status = bulb_state;
             gear_was_ever_engaged = is_gear_engaged();
             break;
         case IGNITION_POWER:
@@ -170,36 +170,36 @@ static void execute_engine_start_changes() {
                 if (is_button_pressed() && !gear_was_ever_engaged) {
                     // check if we are pressing button while engaging gear
                     ignore_next_button_release();
-                    force_beam_off = true;
+                    force_bulb_off = true;
                 }
-                beam_state = false;
-                target_beam_status = !force_beam_off;
+                bulb_state = false;
+                target_bulb_status = !force_bulb_off;
                 gear_was_ever_engaged = true;
             } else {
                 // neutral
-                target_beam_status = (!force_beam_off) && (gear_was_ever_engaged || beam_state);
+                target_bulb_status = (!force_bulb_off) && (gear_was_ever_engaged || bulb_state);
             }
             if (exchange_button_release_flag()) {
-                beam_state = true;
-                force_beam_off = target_beam_status;
+                bulb_state = true;
+                force_bulb_off = target_bulb_status;
             }
             break;
     }
 
     last_engine_start_status = current_engine_start_status;
 
-    if (target_beam_status == false) {
-        set_beam_on_off(false);
-        beam_status_changes = BEAM_OFF;
-    } else if (beam_status_changes == BEAM_OFF) {
+    if (target_bulb_status == false) {
+        set_bulb_on_off(false);
+        bulb_status_changes = BULB_OFF;
+    } else if (bulb_status_changes == BULB_OFF) {
         // jeżeli było WDR, to od razu idziemy do zapalonej
         if (was_unexpected_reset()) {
-            beam_status_changes = BEAM_ON;
-            set_beam_on_off(true);
+            bulb_status_changes = BULB_ON;
+            set_bulb_on_off(true);
         } else {
-            // launch beam brightening after wait
-            beam_status_changes = BEAM_WAITING;
-            next_beam_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
+            // launch bulb brightening after wait
+            bulb_status_changes = BULB_WAITING;
+            next_bulb_status_change_at = HALF_A_SECOND_INTERVAL + get_timer_value();
         }
     }
 }
@@ -207,7 +207,7 @@ static void execute_engine_start_changes() {
 // 0 - 10   - ZERO
 // 20 - 205 - UNDER_LOAD
 // 820+     - FULL
-static inline beam_actual_status map_beam(uint16_t beam_value)
+static inline bulb_actual_status map_bulb(uint16_t bulb_value)
 {
     // 50 mv -> 10
     // 100 mV -> 20
@@ -215,19 +215,19 @@ static inline beam_actual_status map_beam(uint16_t beam_value)
     // 1 V -> 205
     // 2,5 V -> 512
     // 4 V -> 820
-    if (beam_value <= 10) {
-        return BEAM_VOLTAGE_ZERO;
+    if (bulb_value <= 10) {
+        return BULB_VOLTAGE_ZERO;
     }
-    if (beam_value <= 19) {
-        return BEAM_VOLTAGE_UNKNOWN_READING;
+    if (bulb_value <= 19) {
+        return BULB_VOLTAGE_UNKNOWN_READING;
     }
-    if (beam_value <= 205) {
-        return BEAM_VOLTAGE_UNDER_LOAD;
+    if (bulb_value <= 205) {
+        return BULB_VOLTAGE_UNDER_LOAD;
     }
-    if (beam_value <= 819) {
-        return BEAM_VOLTAGE_UNKNOWN_READING;
+    if (bulb_value <= 819) {
+        return BULB_VOLTAGE_UNKNOWN_READING;
     }
-    return BEAM_VOLTAGE_FULL;
+    return BULB_VOLTAGE_FULL;
 }
 
 typedef enum led_status_e {
@@ -242,8 +242,8 @@ typedef enum led_status_e {
     LED_SLOW_BLINKING,
     // slow blinking, 1 Hz with 50% duty cycle (i.e. 0,5 s on, 0,5 s off)
     LED_CLOCK_BLINKING,
-    // on or off depending on beam status
-    LED_FOLLOW_BEAM
+    // on or off depending on bulb status
+    LED_FOLLOW_BULB
 } led_status;
 
 static led_status current_led_status_value;
@@ -261,14 +261,14 @@ static void execute_led_info_changes()
                 next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
             }
             if (timer > ONE_SECOND_INTERVAL) {
-                current_led_status_value = LED_FOLLOW_BEAM;
+                current_led_status_value = LED_FOLLOW_BULB;
             } else {
                 set_led_on();
             }
             return ;
         case LED_INITIAL_FAST_BLINKING:
            if (timer > 2*ONE_SECOND_INTERVAL-ONE_TENTH_SECOND_INTERVAL) { // without -1/10 sec here we have five blinks, and one very short blink
-                current_led_status_value = LED_FOLLOW_BEAM;
+                current_led_status_value = LED_FOLLOW_BULB;
             } else if (next_led_status_change_at == timer){
                 next_led_status_change_at = FIFTH_SECOND_INTERVAL + timer;
                  if (is_led_on()) {
@@ -283,7 +283,7 @@ static void execute_led_info_changes()
     }
 
     // TODO: this is too fucking hardcoded
-    if (current_led_status_value != LED_FOLLOW_BEAM && next_led_status_change_at == timer) {
+    if (current_led_status_value != LED_FOLLOW_BULB && next_led_status_change_at == timer) {
         // we have blinking in progress, and it's blink change time
         if (is_led_on()) {
             set_led_off();
@@ -311,26 +311,26 @@ static void execute_led_info_changes()
         return ;
     }
 
-    // so we are in the state of LED_FOLLOW_BEAM
+    // so we are in the state of LED_FOLLOW_BULB
 
-    uint16_t beam_value = get_beam_adc_result();
-    beam_actual_status beam_status_value = map_beam(beam_value);
+    uint16_t bulb_value = get_bulb_adc_result();
+    bulb_actual_status bulb_status_value = map_bulb(bulb_value);
 
-    // beam on
-    // - BEAM_VOLTAGE_UNDER_LOAD -> ok
-    // - BEAM_VOLTAGE_ZERO -> bulb failure or fuse blown
-    // beam off
-    // - BEAM_VOLTAGE_FULL -> ok
-    // - BEAM_VOLTAGE_ZERO -> bulb failure or fuse blown
+    // bulb on
+    // - BULB_VOLTAGE_UNDER_LOAD -> ok
+    // - BULB_VOLTAGE_ZERO -> bulb failure or fuse blown
+    // bulb off
+    // - BULB_VOLTAGE_FULL -> ok
+    // - BULB_VOLTAGE_ZERO -> bulb failure or fuse blown
     led_status target_led_status_value;
-    switch (beam_status_changes) {
-        case BEAM_ON:
-            switch (beam_status_value) {
-                case BEAM_VOLTAGE_UNDER_LOAD:
+    switch (bulb_status_changes) {
+        case BULB_ON:
+            switch (bulb_status_value) {
+                case BULB_VOLTAGE_UNDER_LOAD:
                     set_led_on();
-                    target_led_status_value = LED_FOLLOW_BEAM;
+                    target_led_status_value = LED_FOLLOW_BULB;
                     break;
-                case BEAM_VOLTAGE_ZERO:
+                case BULB_VOLTAGE_ZERO:
                     target_led_status_value = LED_SLOW_BLINKING;
                     break;
                 default:
@@ -338,13 +338,13 @@ static void execute_led_info_changes()
                     break;
             }
             break;
-        case BEAM_OFF:
-            switch (beam_status_value) {
-                case BEAM_VOLTAGE_FULL:
+        case BULB_OFF:
+            switch (bulb_status_value) {
+                case BULB_VOLTAGE_FULL:
                     set_led_off();
-                    target_led_status_value = LED_FOLLOW_BEAM;
+                    target_led_status_value = LED_FOLLOW_BULB;
                     break;
-                case BEAM_VOLTAGE_ZERO:
+                case BULB_VOLTAGE_ZERO:
                     target_led_status_value = LED_SLOW_BLINKING;
                     break;
                 default:
@@ -353,11 +353,11 @@ static void execute_led_info_changes()
             }
             break;
         default:
-            // beam change in progress
+            // bulb change in progress
             target_led_status_value = LED_CLOCK_BLINKING;
             break;
     }
-    if (target_led_status_value != LED_FOLLOW_BEAM && current_led_status_value == LED_FOLLOW_BEAM) {
+    if (target_led_status_value != LED_FOLLOW_BULB && current_led_status_value == LED_FOLLOW_BULB) {
         // we are about to blink. schedule led blink time
         if (target_led_status_value == LED_CLOCK_BLINKING) {
             next_led_status_change_at = HALF_A_SECOND_INTERVAL + timer;
@@ -386,14 +386,14 @@ static inline void execute_state_transition_changes()
 
         my_state++;
         if (my_state == 51) {
-            set_beam_on_off(false);
+            set_bulb_on_off(false);
             my_state = 0;
         } else if (my_state == 1) {
-            start_beam_pwm(5);
+            start_bulb_pwm(5);
         } else if (my_state == 50) {
-            set_beam_on_off(true);
+            set_bulb_on_off(true);
         } else {
-            set_beam_pwm(my_state*5);
+            set_bulb_pwm(my_state*5);
         }
         ctr++;
     }
@@ -442,7 +442,7 @@ static inline void execute_state_transition_changes()
 
 static inline void adjust_pwm_values()
 {
-    adjust_beam_pwm();
+    adjust_bulb_pwm();
     #ifdef LED_ADC
     adjust_led_pwm();
     #endif // LED_ADC

@@ -12,7 +12,7 @@
 // PA2 - napięcie AKU
 // PA3 - światła
 
-uint16_t __beam_adc_result;
+uint16_t __bulb_adc_result;
 
 static inline void start_adc()
 {
@@ -35,14 +35,14 @@ static inline void start_adc()
 }
 
 
-inline void launch_beam_adc()
+inline void launch_bulb_adc()
 {
     // if ADC is in progress, just skip the call
     if (ADCSRA & _BV(ADSC)) {
         return ;
     }
 
-    __beam_adc_result = 0xFFFF;
+    __bulb_adc_result = 0xFFFF;
 
     // start ADC - światła, PA3
     // REFS1 = 1 - 1.1 V as a reference
@@ -81,7 +81,7 @@ ISR (ADC_vect, ISR_NAKED)
     // MUX0 differentiates channel on PIN 2 and 3
     if (bit_is_set(ADMUX, MUX0)) {
         // światła
-        __beam_adc_result = adc_result;
+        __bulb_adc_result = adc_result;
     } else {
         // LED
         __power_adc_result = adc_result;

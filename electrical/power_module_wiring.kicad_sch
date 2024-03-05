@@ -513,7 +513,7 @@
     (uuid f9733853-b345-4052-83b8-e823d306b776)
   )
 
-  (label "LO Beam Power" (at 45.72 62.23 0) (fields_autoplaced)
+  (label "LO Bulb Power" (at 45.72 62.23 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid e88c02c7-1a7a-47fa-ab2e-7954b6234f84)
     (property "Color" "B/Bl" (at 45.72 63.5 0) (show_name)

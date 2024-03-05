@@ -15,7 +15,7 @@
 // setup PWM module
 extern void start_pwm();
 
-static inline void set_beam_pwm(uint8_t duty_cycle);
+static inline void set_bulb_pwm(uint8_t duty_cycle);
 
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
 static inline void set_led_on()
@@ -47,7 +47,7 @@ static inline void set_led_pwm(uint8_t duty_cycle) {
 }
 
 // ustawia światła na włączone (100% mocy) lub wyłączone
-static inline void set_beam_on_off(bool on)
+static inline void set_bulb_on_off(bool on)
 {
     // ustawienie wartości portu
     if (on) {
@@ -59,19 +59,19 @@ static inline void set_beam_on_off(bool on)
     }
     // odpięcie PWM
     TCCR0A &= ~(_BV(COM0A1) | _BV(COM0A0));
-    set_beam_pwm(0);
+    set_bulb_pwm(0);
 }
 
 // zmienia poziom mocy świateł
-// wcześniej trzeba zawołać start_beam_pwm
-static inline void set_beam_pwm(uint8_t duty_cycle) {
+// wcześniej trzeba zawołać start_bulb_pwm
+static inline void set_bulb_pwm(uint8_t duty_cycle) {
     OCR0A = duty_cycle;
 }
 
 // włącza światła i ustawia je na wybrany ułamek mocy
-static inline void start_beam_pwm(uint8_t duty_cycle)
+static inline void start_bulb_pwm(uint8_t duty_cycle)
 {
-    set_beam_pwm(duty_cycle);
+    set_bulb_pwm(duty_cycle);
     // aktywacja wyjścia PWM
     // Table 11-3. Compare Output Mode, Fast PWM Mode
     // Clear OC0A on Compare Match
@@ -79,7 +79,7 @@ static inline void start_beam_pwm(uint8_t duty_cycle)
     TCCR0A |= _BV(COM0A1) | _BV(COM0A0);
 }
 
-static inline uint8_t get_beam_pwm_duty_cycle() {
+static inline uint8_t get_bulb_pwm_duty_cycle() {
     return OCR0A;
 }
 
