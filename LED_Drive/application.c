@@ -394,6 +394,10 @@ static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t ar
     return (uint16_t)vec;
 }
 
+#ifdef SIMULATION
+extern void process_bulb_adc_result(uint16_t);
+#endif // SIMULATION
+
 static inline void execute_state_transition_changes()
 {
     // toogle pin output
@@ -402,7 +406,9 @@ static inline void execute_state_transition_changes()
     //execute_engine_start_changes();
     //execute_led_info_changes();
 
-
+    #ifdef SIMULATION
+    process_bulb_adc_result(333);
+    #endif // SIMULATION
 
     if (exchange_button_release_flag()) {
 

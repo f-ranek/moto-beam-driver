@@ -14,11 +14,11 @@
 
 static uint16_t process_adc_result(uint16_t* arr, uint16_t data, uint8_t* status, int8_t bit_size);
 
-#define BULB1T_ADC_BITS 6
-#define BULB2T_ADC_BITS 3
+#define BULB1T_ADC_BITS 5
+#define BULB2T_ADC_BITS 5
 #define BULB3T_ADC_BITS 3
 #define BULB_ADC_BITS  3
-#define ACCU_ADC_BITS  3
+#define ACCU_ADC_BITS  1
 
 #if (BULB1T_ADC_BITS>=7) || (BULB1T_ADC_BITS>=7) || (BULB3T_ADC_BITS>=7) || (BULB_ADC_BITS>=7) || (ACCU_ADC_BITS>=7)
 #define sum_t uint32_t
@@ -59,8 +59,10 @@ uint8_t __bulb_adc_status;
 #define NO_RESULT 0xFFFF
 #endif // DEBUG
 
-
-static inline void process_bulb_adc_result(uint16_t data_item) {
+#ifndef SIMULATION
+static inline
+#endif // SIMULATION
+void process_bulb_adc_result(uint16_t data_item) {
     uint16_t temp = process_adc_result(__bulb1t_adc_results, data_item, &__bulb1t_adc_status, BULB1T_ADC_BITS);
     if (__bulb1t_adc_status & 0x80) {
         temp = process_adc_result(__bulb2t_adc_results, temp, &__bulb2t_adc_status, BULB2T_ADC_BITS);
@@ -74,9 +76,9 @@ static inline void process_bulb_adc_result(uint16_t data_item) {
 }
 
 static inline void process_accu_adc_result(uint16_t data_item) {
-    // __accu_adc_result = process_adc_result(__accu_adc_results, data_item, &__accu_adc_status, ACCU_ADC_BITS);
-    __accu_adc_result = data_item;
-    __accu_adc_status = 0x80;
+    __accu_adc_result = process_adc_result(__accu_adc_results, data_item, &__accu_adc_status, ACCU_ADC_BITS);
+    //__accu_adc_result = data_item;
+    //__accu_adc_status = 0x80;
 }
 
 static uint16_t process_adc_result(uint16_t* arr, uint16_t data_item, uint8_t* status, int8_t bit_size)
