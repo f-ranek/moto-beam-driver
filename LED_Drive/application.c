@@ -15,6 +15,7 @@
 #include "pin_io.h"
 #include "timer.h"
 #include "main.h"
+#include "spi.h"
 
 /*
 typedef enum bulb_actual_status_e {
@@ -372,62 +373,62 @@ static void execute_led_info_changes()
 
 */
 
+typedef struct app_status_ {
+    uint8_t  bulb_pwm;
+    uint16_t bulb_voltage;
+    uint8_t  xyz;
+    uint16_t accu_voltage;
+} app_status_t;
+
+
 static uint8_t my_state;
 static uint8_t ctr = 0x92;
+
+static app_status_t app_status;
+
+static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t arg) {
+    typedef uint8_t v2 __attribute__((vector_size (2)));
+    v2 vec;
+    vec[0] = arg >> 8;
+    vec[1] = arg;
+    return (uint16_t)vec;
+}
 
 static inline void execute_state_transition_changes()
 {
     // toogle pin output
-    PINA |= _BV(7);
+    // PINA |= _BV(7);
 
     //execute_engine_start_changes();
     //execute_led_info_changes();
+
+
+
     if (exchange_button_release_flag()) {
 
         my_state++;
         if (my_state == 51) {
             set_bulb_on_off(false);
             my_state = 0;
+            app_status.bulb_pwm = 0;
         } else if (my_state == 1) {
             start_bulb_pwm(5);
+            app_status.bulb_pwm = 5;
         } else if (my_state == 50) {
             set_bulb_on_off(true);
+            app_status.bulb_pwm = 255;
         } else {
             set_bulb_pwm(my_state*5);
+            app_status.bulb_pwm = get_bulb_pwm_duty_cycle();
         }
         ctr++;
     }
 
-    // SPI WIP
+    app_status.accu_voltage = reverse_bytes(get_accu_adc_result());
+    app_status.bulb_voltage = reverse_bytes(get_bulb_adc_result());
+    app_status.xyz = ctr;
 
-    USIDR = ctr;
-    const uint8_t low  = _BV(USIWM0)|_BV(USITC);
-    const uint8_t high = _BV(USIWM0)|_BV(USITC)|_BV(USICLK);
-    // 8 times
-    __asm__ __volatile__ (
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        "out %[USICR_], %[low_]"            "\n"
-        "out %[USICR_], %[high_]"           "\n"
-        :
-        : [low_]                "r" (low),
-          [high_]               "r" (high),
-          [USICR_]              "I" (_SFR_IO_ADDR(USICR))
-    );
-
-    USICR = 0;
+    emmit_spi_data(&app_status, sizeof(app_status));
 
     /*
     if (is_led_on()) {
@@ -437,6 +438,12 @@ static inline void execute_state_transition_changes()
     PORTA |= _BV(7);
     PORTA &= ~_BV(7);
     */
+
+    if (get_timer_value() & 1) {
+        launch_bulb_adc();
+    } else {
+        launch_accu_adc();
+    }
 }
 /*
 
