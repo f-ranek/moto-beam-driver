@@ -375,10 +375,14 @@ static void execute_led_info_changes()
 */
 
 typedef struct app_status_ {
-    uint16_t bulb_voltage;
-    uint16_t accu_voltage;
-    uint16_t adc_count;
-    uint8_t  bulb_pwm;
+    uint16_t bulb_voltage;      // 1,2
+    uint16_t accu_voltage;      // 3,4
+    uint16_t adc_count;         // 5,6  - powinno być około 10 000
+    uint8_t  bulb_pwm;          // 7
+    #ifdef DEBUG
+    uint16_t bulb_adc_count;     // 8,9
+    uint16_t accu_adc_count;     // 10,11
+    #endif
 } app_status_t;
 
 
@@ -411,7 +415,11 @@ static inline void execute_state_transition_changes()
     const uint16_t timer = get_timer_value();
     if (timer == next_adc_counter_read_timeline) {
         next_adc_counter_read_timeline = timer + ONE_SECOND_INTERVAL;
-        app_status.adc_count = exchange_adc_count();
+        app_status.adc_count = reverse_bytes(exchange_adc_count());
+        #ifdef DEBUG
+        app_status.bulb_adc_count = reverse_bytes(exchange_bulb_adc_count());
+        app_status.accu_adc_count = reverse_bytes(exchange_accu_adc_count());
+        #endif
     }
 
     #ifdef SIMULATION
@@ -438,9 +446,13 @@ static inline void execute_state_transition_changes()
         ctr++;
     }
 
-    app_status.accu_voltage = reverse_bytes(get_accu_adc_result());
-    app_status.bulb_voltage = reverse_bytes(get_bulb_adc_result());
-    // app_status.xyz = ctr;
+    if (is_accu_adc_result_ready()) {
+        app_status.accu_voltage = reverse_bytes(get_accu_adc_result());
+    }
+
+    if (is_bulb_adc_result_ready()) {
+        app_status.bulb_voltage = reverse_bytes(get_bulb_adc_result());
+    }
 
     emmit_spi_data(&app_status, sizeof(app_status));
 
@@ -453,10 +465,16 @@ static inline void execute_state_transition_changes()
     PORTA &= ~_BV(7);
     */
 
-    if (get_timer_value() & 1) {
-        launch_bulb_adc();
-    } else {
-        launch_accu_adc();
+    PINA |= _BV(7);
+
+    // odpalamy co 6 ms
+    switch (get_timer_value() & 3) {
+        case 0:
+            launch_bulb_adc();
+            break;
+        case 2:
+            launch_accu_adc();
+            break;
     }
 }
 /*

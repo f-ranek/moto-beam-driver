@@ -18,6 +18,15 @@
 #include "pin_io.h"
 #include "main.h"
 
+FUSES =
+{
+    // SUT = 00 - startup time = 6 CK
+    .low = (FUSE_CKDIV8 & FUSE_SUT1 & FUSE_SUT0 & FUSE_CKSEL3 & FUSE_CKSEL2 & FUSE_CKSEL0),
+    // BODLEVEL = 100 - ~4.3V
+    .high = (FUSE_SPIEN & FUSE_WDTON & FUSE_BODLEVEL1 & FUSE_BODLEVEL0),
+    .extended = EFUSE_DEFAULT,
+};
+
 // setup initial device status
 static inline void setup_initial_port_status();
 
