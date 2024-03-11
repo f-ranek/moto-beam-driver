@@ -68,13 +68,14 @@ typedef enum bulb_status_change_e {
 
 static uint16_t next_bulb_status_change_at;
 static bulb_status_change bulb_status_changes;
+*/
 
 // 1 second in 3ms ticks
 #define ONE_SECOND_INTERVAL ((uint16_t)(1000 / 3))
 // 5 seconds in 3ms ticks
 #define FIVE_SECONDS_INTERVAL ((uint16_t)(5000 / 3))
 
-
+/*
 // 1/5 second in 3ms ticks
 #define FIFTH_SECOND_INTERVAL ((uint16_t)(200 / 3))
 #define FOUR_FIFTH_SECOND_INTERVAL ((uint16_t)(ONE_SECOND_INTERVAL - FIFTH_SECOND_INTERVAL))
@@ -374,15 +375,16 @@ static void execute_led_info_changes()
 */
 
 typedef struct app_status_ {
-    uint8_t  bulb_pwm;
     uint16_t bulb_voltage;
-    uint8_t  xyz;
     uint16_t accu_voltage;
+    uint16_t adc_count;
+    uint8_t  bulb_pwm;
 } app_status_t;
 
 
 static uint8_t my_state;
 static uint8_t ctr = 0x92;
+static uint16_t next_adc_counter_read_timeline;
 
 static app_status_t app_status;
 
@@ -405,6 +407,12 @@ static inline void execute_state_transition_changes()
 
     //execute_engine_start_changes();
     //execute_led_info_changes();
+
+    const uint16_t timer = get_timer_value();
+    if (timer == next_adc_counter_read_timeline) {
+        next_adc_counter_read_timeline = timer + ONE_SECOND_INTERVAL;
+        app_status.adc_count = exchange_adc_count();
+    }
 
     #ifdef SIMULATION
     process_bulb_adc_result(333);
@@ -432,7 +440,7 @@ static inline void execute_state_transition_changes()
 
     app_status.accu_voltage = reverse_bytes(get_accu_adc_result());
     app_status.bulb_voltage = reverse_bytes(get_bulb_adc_result());
-    app_status.xyz = ctr;
+    // app_status.xyz = ctr;
 
     emmit_spi_data(&app_status, sizeof(app_status));
 

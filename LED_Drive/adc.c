@@ -53,6 +53,8 @@ uint8_t __bulb_adc_status;
 //#define ADC_SOURCE_ACCU 1
 //#define ADC_SOURCE_BULB 2
 
+uint16_t __adc_count;
+
 #ifdef DEBUG
 #define NO_RESULT 0x92F4
 #else
@@ -64,6 +66,7 @@ static inline
 #endif // SIMULATION
 void process_bulb_adc_result(uint16_t data_item) {
     uint16_t temp = process_adc_result(__bulb1t_adc_results, data_item, &__bulb1t_adc_status, BULB1T_ADC_BITS);
+    /*
     if (__bulb1t_adc_status & 0x80) {
         temp = process_adc_result(__bulb2t_adc_results, temp, &__bulb2t_adc_status, BULB2T_ADC_BITS);
         if (__bulb2t_adc_status & 0x80) {
@@ -72,7 +75,8 @@ void process_bulb_adc_result(uint16_t data_item) {
                 __bulb_adc_result = process_adc_result(__bulb_adc_results, temp, &__bulb_adc_status, BULB_ADC_BITS);
             }
         }
-    }
+    }*/
+    __bulb_adc_result = temp;
 }
 
 static inline void process_accu_adc_result(uint16_t data_item) {
@@ -141,18 +145,22 @@ static inline void start_adc()
     // 111 - /128
     // target frequency should be in range 50 - 200 kHz
     // so for 4MHz clock, we need to /32 to get 125 kHz
-    ADCSRA = _BV(ADEN) | _BV(ADIE) | _BV(ADPS2) | _BV(ADPS0);
+    ADCSRA = _BV(ADEN) | _BV(ADIE) | _BV(ADIF) | _BV(ADPS2) | _BV(ADPS0);
     // ADC will start on CPU entering sleep state
 }
 
+#define RETURN_IF_ADC_IN_PROGRESS()     \
+do {                                    \
+    if (bit_is_set(ADCSRA, ADSC)) {     \
+        return ;                        \
+    }                                   \
+} while(0)
 
 inline void launch_bulb_adc()
 {
     // if ADC is in progress, just skip the call
     //if (__adc_source != ADC_SOURCE_NONE) {
-    if (ADCSRA != 0) {
-        return ;
-    }
+    RETURN_IF_ADC_IN_PROGRESS();
     // start ADC - światła, PA3
     // PA3 - MUX1, MUX0
     ADMUX = _BV(MUX1) | _BV(MUX0);
@@ -166,9 +174,7 @@ inline void launch_accu_adc()
 {
     // if ADC is in progress, just skip the call
     // if (__adc_source != ADC_SOURCE_NONE) {
-    if (ADCSRA != 0) {
-        return ;
-    }
+    RETURN_IF_ADC_IN_PROGRESS();
     // PA2 - MUX1
     ADMUX = _BV(MUX1);
     // __adc_source = ADC_SOURCE_ACCU;
@@ -180,6 +186,13 @@ inline void launch_accu_adc()
 ISR (ADC_vect, ISR_NAKED)
 {
     cli();
+
+    // wyłączenie autostartu ADC
+    ADCSRA &= ~_BV(ADIE);
+    ADCSRA |= _BV(ADIF);
+    ADMUX = 0;
+
+    __adc_count++;
 
     // read ADCL
     // read ADCH
@@ -198,12 +211,12 @@ ISR (ADC_vect, ISR_NAKED)
     // wyłączenie autostartu ADC
     // ADCSRA &= ~_BV(ADIE);
     // wyłączenie ADC
-    ADCSRA = 0;
-    ADMUX = 0;
+    // ADCSRA = 0;
+    // ADMUX = 0;
     // __adc_source = ADC_SOURCE_NONE;
 
     // toggle pin
-    PINA |= _BV(7);
+    // PINA |= _BV(7);
 
     sei();
     reti();

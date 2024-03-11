@@ -17,6 +17,8 @@ extern uint16_t __bulb_adc_result;
 extern uint8_t __accu_adc_status;
 extern uint8_t __bulb_adc_status;
 
+extern uint16_t __adc_count;
+
 // launch adc conversion for low beam value
 extern void launch_bulb_adc();
 // launch adc conversion for accu voltage
@@ -45,5 +47,14 @@ static inline uint16_t get_accu_adc_result()
 {
     return __accu_adc_result;
 }
+
+// get adc result from accu conversion
+static inline uint16_t exchange_adc_count()
+{
+    uint16_t result = __adc_count;
+    __adc_count = 0;
+    return result;
+}
+
 
 #endif /* ADC_H_ */
