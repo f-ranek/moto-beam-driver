@@ -20,7 +20,7 @@ extern void setup_timer_3ms();
 
 // get current timer value
 // incremented every 3 ms
-static inline uint16_t get_timer_value() {
+inline uint16_t get_timer_value() {
     return __timer_3ms_counter;
 }
 

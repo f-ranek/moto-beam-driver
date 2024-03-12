@@ -24,29 +24,23 @@ extern void launch_bulb_adc();
 // launch adc conversion for accu voltage
 extern void launch_accu_adc();
 
-// get adc result from beam conversion
+// is adc result from bulb sampling ready
 static inline bool is_bulb_adc_result_ready()
 {
     return (__bulb_adc_count & 0x80) != 0;
 }
 
 // get adc result from beam conversion
-static inline uint16_t get_bulb_adc_result()
-{
-    return __bulb_adc_result;
-}
+extern uint16_t get_bulb_adc_result();
 
-// get adc result from accu conversion
+// is adc result from accu sampling ready
 static inline bool is_accu_adc_result_ready()
 {
     return (__accu_adc_count & 0x80) != 0;
 }
 
 // get adc result from accu conversion
-static inline uint16_t get_accu_adc_result()
-{
-    return __accu_adc_result;
-}
+extern uint16_t get_accu_adc_result();
 
 // get adc result from accu conversion
 static inline uint16_t exchange_adc_count()

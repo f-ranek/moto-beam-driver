@@ -404,13 +404,19 @@ static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t ar
 extern void process_bulb_adc_result(uint16_t);
 #endif // SIMULATION
 
+uint16_t accu_adc_result;
+uint16_t bulb_adc_result;
+
 static inline void execute_state_transition_changes()
 {
-    // toogle pin output
-    // PINA |= _BV(7);
-
-    //execute_engine_start_changes();
-    //execute_led_info_changes();
+    if (is_bulb_adc_result_ready()) {
+        bulb_adc_result = get_bulb_adc_result();
+        app_status.bulb_voltage = reverse_bytes(bulb_adc_result);
+    }
+    if (is_accu_adc_result_ready()) {
+        accu_adc_result = get_accu_adc_result();
+        app_status.accu_voltage = reverse_bytes(accu_adc_result);
+    }
 
     const uint16_t timer = get_timer_value();
     if (timer == next_adc_counter_read_timeline) {
@@ -446,33 +452,16 @@ static inline void execute_state_transition_changes()
         ctr++;
     }
 
-    if (is_accu_adc_result_ready()) {
-        app_status.accu_voltage = reverse_bytes(get_accu_adc_result());
-    }
-
-    if (is_bulb_adc_result_ready()) {
-        app_status.bulb_voltage = reverse_bytes(get_bulb_adc_result());
-    }
-
     emmit_spi_data(&app_status, sizeof(app_status));
 
-    /*
-    if (is_led_on()) {
-        set_led_off();
-    }
-    PORTA &= ~_BV(7);
-    PORTA |= _BV(7);
-    PORTA &= ~_BV(7);
-    */
-
-    PINA |= _BV(7);
-
-    // odpalamy co 6 ms
     switch (get_timer_value() & 3) {
         case 0:
+            // odpalamy co 6 ms
             launch_bulb_adc();
             break;
         case 2:
+        case 3:
+            // odpalamy co 3 ms
             launch_accu_adc();
             break;
     }
@@ -487,6 +476,7 @@ static inline void adjust_pwm_values()
     #endif // LED_ADC
 }*/
 
+/*
 #ifndef SIMULATION
 
 // do not store used registers on stack
@@ -494,8 +484,9 @@ void loop_application_logic(void)
     __attribute__((OS_main));
 
 #endif
+*/
 
-inline void loop_application_logic()
+void loop_application_logic()
 {
     read_pin_values();
     execute_state_transition_changes();

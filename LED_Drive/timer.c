@@ -41,9 +41,9 @@ void setup_timer_3ms()
 uint16_t __timer_3ms_counter;
 
 // interrupt every 3 ms
-ISR (TIM1_COMPA_vect, ISR_NAKED)
+ISR (TIM1_COMPA_vect, ISR_NOBLOCK)
 {
-    cli();
+    PORTA |= _BV(7);
     // do the job
     loop_application_logic();
 
@@ -51,8 +51,5 @@ ISR (TIM1_COMPA_vect, ISR_NAKED)
     ++__timer_3ms_counter;
     // reset watchdog
     wdt_reset();
-
-    // exit interrupt handler
-    sei();
-    reti();
+    PORTA &= ~_BV(7);
 }
