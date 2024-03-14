@@ -115,7 +115,7 @@ static inline void process_bulb_adc_result(uint16_t data_item) {
     // co daje 39 próbek, które trzeba zebrać, żeby uśrednić sygnał
 
     __bulb_adc_sum += data_item;
-    if (__bulb_adc_count++ == __bulb_adc_target) {
+    if (++__bulb_adc_count == __bulb_adc_target) {
         stop_adc();
         __bulb_adc_count = 0xFF;
         INCREMENT_IF_DEBUG(__dbg_bulb_adc_count);
@@ -135,7 +135,7 @@ uint16_t get_bulb_adc_result()
 
 static inline void process_accu_adc_result(uint16_t data_item) {
     __accu_adc_sum += data_item;
-    if (__accu_adc_count++ == _BV(__accu_adc_bits)) {
+    if (++__accu_adc_count == _BV(__accu_adc_bits)) {
         stop_adc();
         __accu_adc_count = 0xFF;
         INCREMENT_IF_DEBUG(__dbg_accu_adc_count);

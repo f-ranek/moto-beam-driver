@@ -375,13 +375,14 @@ static void execute_led_info_changes()
 */
 
 typedef struct app_status_ {
-    uint16_t bulb_voltage;      // 1,2
-    uint16_t accu_voltage;      // 3,4
-    uint16_t adc_count;         // 5,6  - powinno być około 10 000
-    uint8_t  bulb_pwm;          // 7
+    uint8_t adc_voltage_hi;     // bulb, accu - HI 4 bits
+    uint8_t bulb_voltage_lo;
+    uint8_t accu_voltage_lo;
+    uint16_t adc_count;         // 4,5  - 6480 - 6503 ???
+    uint8_t  bulb_pwm;          // 6
     #ifdef DEBUG
-    uint16_t bulb_adc_count;     // 8,9
-    uint16_t accu_adc_count;     // 10,11
+    uint8_t bulb_adc_count;     // 7,8
+    uint8_t accu_adc_count;     // 9,10
     #endif
 } app_status_t;
 
@@ -411,11 +412,13 @@ static inline void execute_state_transition_changes()
 {
     if (is_bulb_adc_result_ready()) {
         bulb_adc_result = get_bulb_adc_result();
-        app_status.bulb_voltage = reverse_bytes(bulb_adc_result);
+        app_status.bulb_voltage_lo = bulb_adc_result;
+        app_status.adc_voltage_hi = (app_status.adc_voltage_hi & 0x0F) | ((reverse_bytes(bulb_adc_result) & 0x0F) << 4);
     }
     if (is_accu_adc_result_ready()) {
         accu_adc_result = get_accu_adc_result();
-        app_status.accu_voltage = reverse_bytes(accu_adc_result);
+        app_status.accu_voltage_lo = accu_adc_result;
+        app_status.adc_voltage_hi = (app_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
     }
 
     const uint16_t timer = get_timer_value();
@@ -460,7 +463,6 @@ static inline void execute_state_transition_changes()
             launch_bulb_adc();
             break;
         case 2:
-        case 3:
             // odpalamy co 3 ms
             launch_accu_adc();
             break;
