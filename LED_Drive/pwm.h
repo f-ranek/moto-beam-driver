@@ -15,8 +15,6 @@
 // setup PWM module
 extern void start_pwm();
 
-static inline void set_bulb_pwm(uint8_t duty_cycle);
-
 // ustawia diodę LED na włączoną (PWM) lub wyłączoną
 static inline void set_led_on()
 {
@@ -46,6 +44,29 @@ static inline void set_led_pwm(uint8_t duty_cycle) {
     OCR0B = duty_cycle;
 }
 
+// -------------------------------------------------- //
+
+static inline uint8_t get_bulb_pwm_duty_cycle() {
+    return OCR0A;
+}
+
+// zmienia poziom mocy świateł
+// wcześniej trzeba zawołać start_bulb_pwm
+static inline void adjust_bulb_power(uint8_t duty_cycle) {
+    OCR0A = duty_cycle;
+}
+
+// włącza światła i ustawia je na wybrany ułamek mocy
+static inline void start_bulb_pwm(uint8_t duty_cycle)
+{
+    adjust_bulb_power(duty_cycle);
+    // aktywacja wyjścia PWM
+    // Table 11-3. Compare Output Mode, Fast PWM Mode
+    // Clear OC0A on Compare Match
+    // Set OC0A at BOTTOM (non-inverting mode)
+    TCCR0A |= _BV(COM0A1) | _BV(COM0A0);
+}
+
 // ustawia światła na włączone (100% mocy) lub wyłączone
 static inline void set_bulb_on_off(bool on)
 {
@@ -59,28 +80,33 @@ static inline void set_bulb_on_off(bool on)
     }
     // odpięcie PWM
     TCCR0A &= ~(_BV(COM0A1) | _BV(COM0A0));
-    set_bulb_pwm(0);
+    adjust_bulb_power(0);
 }
 
-// zmienia poziom mocy świateł
-// wcześniej trzeba zawołać start_bulb_pwm
-static inline void set_bulb_pwm(uint8_t duty_cycle) {
-    OCR0A = duty_cycle;
+// return value from 0 - bulb off, through pwm duty cycle to 255 - bulb on
+static inline uint8_t get_bulb_power() {
+    if (get_bulb_pwm_duty_cycle() == 0) {
+        return (PORTB & _BV(2)) ? 0 : 0xFF;
+    } else {
+        return get_bulb_pwm_duty_cycle();
+    }
 }
 
-// włącza światła i ustawia je na wybrany ułamek mocy
-static inline void start_bulb_pwm(uint8_t duty_cycle)
+// set bulb power
+// duty_cycle: from 0 - bulb off, through pwm duty cycle to 255 - bulb on
+static inline void set_bulb_power(uint8_t duty_cycle)
 {
-    set_bulb_pwm(duty_cycle);
-    // aktywacja wyjścia PWM
-    // Table 11-3. Compare Output Mode, Fast PWM Mode
-    // Clear OC0A on Compare Match
-    // Set OC0A at BOTTOM (non-inverting mode)
-    TCCR0A |= _BV(COM0A1) | _BV(COM0A0);
-}
-
-static inline uint8_t get_bulb_pwm_duty_cycle() {
-    return OCR0A;
+    if (duty_cycle == 0) {
+        set_bulb_on_off(false);
+    } else if (duty_cycle == 255) {
+        set_bulb_on_off(true);
+    } else {
+        if (get_bulb_pwm_duty_cycle() == 0) {
+            start_bulb_pwm(duty_cycle);
+        } else {
+            adjust_bulb_power(duty_cycle);
+        }
+    }
 }
 
 #endif /* PWM_H_ */
