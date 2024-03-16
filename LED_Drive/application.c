@@ -444,14 +444,31 @@ static inline void adjust_target_pwm_value(uint8_t current,
 
     if (actual_bulb_voltage < VOLTAGE_13_1_V) {
         // mniej niż 13,1 V - idziemy do góry
-        if (current < 255) {
-            pm_consumer(current + 1);
+        uint8_t diff = (VOLTAGE_13_1_V - actual_bulb_voltage) / 4;
+        if (diff == 0) {
+            diff = 1;
+        } else if (diff > 10) {
+            diff = 10;
+        }
+        uint16_t target = (uint16_t)current + (uint16_t)diff;
+        if (target > 255) {
+            pm_consumer(255);
+        } else {
+            pm_consumer(target);
         }
         return ;
     }
 
-    if (actual_bulb_voltage > VOLTAGE_13_1_V + VOLTAGE_0_05_V) {
-        pm_consumer(current - 1);
+    const uint16_t max = VOLTAGE_13_1_V + VOLTAGE_0_05_V;
+    if (actual_bulb_voltage > max) {
+        uint8_t diff = (actual_bulb_voltage - max) / 4;
+        if (diff == 0) {
+            diff = 1;
+        } else if (diff > 10) {
+            diff = 10;
+        }
+        uint8_t target = current - diff;
+        pm_consumer(target);
         return ;
     }
 
@@ -459,7 +476,7 @@ static inline void adjust_target_pwm_value(uint8_t current,
 }
 
 static uint16_t next_bulb_brightening_checkpoint;
-#define BULB_BRIGHTENING_DELAY ((5000)/(3)/(225-2))
+#define BULB_BRIGHTENING_DELAY ((4000)/(3)/(225-2))
 
 static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
 {
@@ -489,18 +506,17 @@ static inline void execute_state_transition_changes()
         app_status.adc_count = reverse_bytes(exchange_adc_count());
     }
 
-    if (my_state == 1 && timer == next_bulb_brightening_checkpoint) {
+    if ((my_state == 1) && (timer == next_bulb_brightening_checkpoint)) {
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
         if (current_power < 220) {
-            // TODO: tutaj jest nie ok
             adjust_bulb_power(current_power + 1);
             next_bulb_brightening_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
             // koniec rozjaśniania
             my_state = 2;
         }
-    } else if (my_state == 2 && ((timer & 0xF) == 0xF)) {
+    } else if ((my_state == 2) && ((timer & 0xF) == 0xF)) {
         adjust_target_pwm_value(get_bulb_power(),
             accu_adc_result, bulb_adc_result,
             &set_bulb_power);

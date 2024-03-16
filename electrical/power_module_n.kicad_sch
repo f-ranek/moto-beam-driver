@@ -1597,7 +1597,7 @@
     (property "Reference" "C7" (at 102.87 73.025 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "1u" (at 102.87 75.565 0)
+    (property "Value" "100n" (at 102.87 75.565 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "" (at 100.0252 77.47 0)
