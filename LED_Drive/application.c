@@ -421,8 +421,8 @@ uint16_t bulb_adc_result;
 // i on później jest uwzględniany
 static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
 {
-    if (accu_adc_result < VOLTAGE_13_V) {
-        // napięcie AKU mniejsze niż 13 V
+    if (accu_adc_result < VOLTAGE_12_5_V) {
+        // napięcie AKU mniejsze niż 12,5 V
         return 255;
     }
     return 503 - (35 * accu_adc_result) / 128;
@@ -434,81 +434,51 @@ static inline void adjust_target_pwm_value(uint8_t current,
     uint16_t accu_adc_result, uint16_t bulb_adc_result,
     pwm_consumer_t pm_consumer)
 {
-    if (accu_adc_result < VOLTAGE_13_V || bulb_adc_result > VOLTAGE_6_V) {
-        // napięcie AKU mniejsze niż 13 V
+    if (accu_adc_result < VOLTAGE_12_5_V || bulb_adc_result > VOLTAGE_6_V) {
+        // napięcie AKU mniejsze niż 12,5 V
         // lub napięcie żarówki > 6 V
         pm_consumer(255);
         return ;
     }
     uint16_t actual_bulb_voltage = accu_adc_result - bulb_adc_result;
-    /*
-    if (actual_bulb_voltage >= VOLTAGE_13_1_V && actual_bulb_voltage <= VOLTAGE_13_2_V) {
-        // nic nie trzeba robić
-        return ;
-    }*/
 
     if (actual_bulb_voltage < VOLTAGE_13_1_V) {
-        // mniej niż 13,1 V - idziemy szybko do góry
-        uint8_t target = calc_target_pwm_value(accu_adc_result);
-        uint8_t diff;
-        if (target > current + 3) {
-            diff = (target - current) / 2;
-        } else {
-            diff = 1;
-        }
-        uint16_t target2 = (uint16_t)current + (uint16_t)diff;
-        if (target2 > 255) {
-            pm_consumer(255);
-        } else {
-            pm_consumer(target2 & 0xFF);
+        // mniej niż 13,1 V - idziemy do góry
+        if (current < 255) {
+            pm_consumer(current + 1);
         }
         return ;
     }
 
-    if (actual_bulb_voltage > VOLTAGE_13_2_V) {
-        uint8_t target = calc_target_pwm_value(accu_adc_result);
-        uint8_t diff;
-        if (current > target + 3) {
-            diff = (current - target) / 2;
-        } else {
-            diff = 1;
-        }
-        uint16_t target2 = (uint16_t)current - (uint16_t)diff;
-        pm_consumer(target2 & 0xFF);
+    if (actual_bulb_voltage > VOLTAGE_13_1_V + VOLTAGE_0_05_V) {
+        pm_consumer(current - 1);
         return ;
     }
 
     // nic nie trzeba robić
 }
-/*
-static void adjust_bulb_pwm(uint8_t pwm)
-{
-    if (pwm == 0) {
-        set_bulb_on_off(false);
-    } else if (pwm == 255) {
-        set_bulb_on_off(true);
-    } else {
-        if (get_bulb_pwm_duty_cycle() == 0) {
-            start_bulb_pwm(pwm);
-        } else {
-            adjust_bulb_pwm(pwm);
-        }
-    }
-}
-*/
 
 static uint16_t next_bulb_brightening_checkpoint;
 #define BULB_BRIGHTENING_DELAY ((5000)/(3)/(225-2))
 
+static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
+{
+    if (old_val == 0) {
+        return new_val;
+    } else {
+        return (new_val + 3 * old_val) / 4;
+    }
+}
+
 static inline void execute_state_transition_changes()
 {
     if (is_bulb_adc_result_ready()) {
-        bulb_adc_result = get_bulb_adc_result();
+        bulb_adc_result = smooth_value(bulb_adc_result, get_bulb_adc_result());
         app_status.bulb_voltage_lo = bulb_adc_result;
         app_status.adc_voltage_hi = (app_status.adc_voltage_hi & 0x0F) | ((reverse_bytes(bulb_adc_result) & 0x0F) << 4);
     }
     if (is_accu_adc_result_ready()) {
-        accu_adc_result = get_accu_adc_result();
+        accu_adc_result = smooth_value(accu_adc_result, get_accu_adc_result());
         app_status.accu_voltage_lo = accu_adc_result;
         app_status.adc_voltage_hi = (app_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
     }
@@ -522,7 +492,7 @@ static inline void execute_state_transition_changes()
     if (my_state == 1 && timer == next_bulb_brightening_checkpoint) {
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
-        if ((current_power != 255) && (current_power < 225 || bulb_adc_result < VOLTAGE_13_1_V)) {
+        if (current_power < 220) {
             // TODO: tutaj jest nie ok
             adjust_bulb_power(current_power + 1);
             next_bulb_brightening_checkpoint = timer + BULB_BRIGHTENING_DELAY;
@@ -530,7 +500,7 @@ static inline void execute_state_transition_changes()
             // koniec rozjaśniania
             my_state = 2;
         }
-    } else if (my_state == 2) {
+    } else if (my_state == 2 && ((timer & 0xF) == 0xF)) {
         adjust_target_pwm_value(get_bulb_power(),
             accu_adc_result, bulb_adc_result,
             &set_bulb_power);
