@@ -20,7 +20,7 @@
 #include "app_adc.h"
 
 static inline bool was_unexpected_reset() {
-    uint8_t reset_flags = _BV(WDRF)
+    const uint8_t reset_flags = _BV(WDRF)
         // remove this flag once tests are done?
         | _BV(EXTRF);
     return ( MCUSR_initial_copy & reset_flags ) != 0;
@@ -29,33 +29,31 @@ static inline bool was_unexpected_reset() {
 app_debug_status_t app_debug_status;
 
 static enum app_state_e {
-    APP_DUMMY_STATUS,
-
-    // 1 - initial status, bulb off
+    // 0 - initial status, bulb off
     APP_INIT,
 
-    // 2 - force off by user
+    // 1 - force off by user
     APP_FORCE_OFF,
 
-    // 3 - transition between off and on
+    // 2 - transition between off and on
     APP_AUTO_BRIGHTENING,
 
-    // 4 - bulb at proper power (13,2 V)
+    // 3 - bulb at proper power (13,2 V)
     APP_AUTO_ON,
 
-    // 5 - still on, but waiting for being off
+    // 4 - still on, but waiting for being off
     APP_WAITING_FOR_BULB_OFF,
 
-    // 6 - automatic off, subject to auto on
+    // 5 - automatic off, subject to auto on
     APP_AUTO_OFF,
 
-    // 7 - transition between off and on
+    // 6 - transition between off and on
     APP_FORCE_BRIGHTENING,
 
-    // 8 - bulb at proper power (13,2 V)
+    // 7 - bulb at proper power (13,2 V)
     APP_FORCE_ON,
 
-    // 9 - forced on, but starter running
+    // 8 - forced on, but starter running
     APP_FORCE_ON_STARTER
 } app_state;
 
@@ -70,7 +68,7 @@ static inline bool is_oil_or_charging()
 static uint16_t next_bulb_checkpoint;
 static uint16_t next_led_checkpoint;
 
-static inline void start_bulb_brightening()
+static void start_bulb_brightening()
 {
     // TODO: sekunda przed rozpoczęciem rozjaśniania
     const uint16_t timer = get_timer_value();
@@ -81,7 +79,7 @@ static inline void start_bulb_brightening()
     next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
 }
 
-static inline void turn_bulb_off_after_delay()
+static void turn_bulb_off_after_delay()
 {
     app_state = APP_WAITING_FOR_BULB_OFF;
     const uint16_t timer = get_timer_value();
@@ -89,7 +87,7 @@ static inline void turn_bulb_off_after_delay()
 }
 
 // status początkowy
-static inline void handle_app_init_state()
+static void handle_app_init_state()
 {
     // prawdopodobnie coś jebło, a jedziemy - od razu 100%
     if (was_unexpected_reset() && is_gear_engaged() && is_oil_or_charging()) {
@@ -120,7 +118,7 @@ static inline void handle_app_init_state()
 }
 
 // ręczne wyłączenie
-static inline void handle_app_force_off_state()
+static void handle_app_force_off_state()
 {
     // tylko naciśnięcie włącza
     if (exchange_button_release_flag()) {
@@ -131,7 +129,7 @@ static inline void handle_app_force_off_state()
 }
 
 // rozjaśnianie
-static inline void handle_app_auto_brightening_state()
+static void handle_app_auto_brightening_state()
 {
     const uint16_t timer = get_timer_value();
 
@@ -165,7 +163,7 @@ static inline void handle_app_auto_brightening_state()
 }
 
 // żarówka włączona
-static inline void handle_app_auto_on_state()
+static void handle_app_auto_on_state()
 {
     const uint16_t timer = get_timer_value();
 
@@ -199,7 +197,7 @@ static inline void handle_app_auto_on_state()
 }
 
 // żarówka za chwilę zgaśnie
-static inline void handle_app_waiting_for_bulb_off_state()
+static void handle_app_waiting_for_bulb_off_state()
 {
     const uint16_t timer = get_timer_value();
 
@@ -234,7 +232,7 @@ static inline void handle_app_waiting_for_bulb_off_state()
 }
 
 // żarówka automatycznie wyłączona
-static inline void handle_app_auto_off_state()
+static void handle_app_auto_off_state()
 {
     if (exchange_button_release_flag()) {
         start_bulb_brightening();
@@ -249,7 +247,7 @@ static inline void handle_app_auto_off_state()
 }
 
 // wymuszenie włączenia, rozjaśnia się
-static inline void handle_app_force_brightening_state()
+static void handle_app_force_brightening_state()
 {
     const uint16_t timer = get_timer_value();
 
@@ -284,7 +282,7 @@ static inline void handle_app_force_brightening_state()
 }
 
 // wymuszenie włączenia, włączona
-static inline void handle_app_force_on_state()
+static void handle_app_force_on_state()
 {
     // naciśnięcie przełącza w tryb auto
     if (exchange_button_release_flag()) {
@@ -300,7 +298,7 @@ static inline void handle_app_force_on_state()
 }
 
 // wymuszenie włączenia, ale kręci rozrusznik
-static inline void handle_app_force_on_starter_state()
+static void handle_app_force_on_starter_state()
 {
     // naciśnięcie przełącza w tryb auto
     bool btn = exchange_button_release_flag();
@@ -321,72 +319,8 @@ static inline bool is_bulb_on_voltage_ok()
     return get_bulb_actual_status() == BULB_VOLTAGE_UNDER_LOAD;
 }
 
-static inline void flip_led()
+static void execute_state_transition_changes()
 {
-    if (is_led_on()) {
-
-    } else {
-        set_led_on();
-    }
-}
-
-static inline void execute_state_transition_changes()
-{
-    const uint16_t timer = get_timer_value();
-    uint16_t led_interval = INTERVAL_FIFTH_SECOND;
-    if (get_accu_status() == STARTER_RUNNING) {
-        set_led_off();
-    } else if (timer == next_led_checkpoint){
-        switch (app_state) {
-            case APP_INIT:
-            case APP_FORCE_OFF:
-            case APP_AUTO_OFF:
-                // - sprawdzenie napięcia - off
-                if (is_bulb_off_voltage_ok()) {
-                    set_led_off();
-                } else {
-                    if (is_led_on()) {
-                        led_interval = INTERVAL_FOUR_FIFTH_SECOND;
-                        set_led_off();
-                    } else{
-                        led_interval = INTERVAL_FIFTH_SECOND;
-                        set_led_on();
-                    }
-                }
-                break;
-            case APP_AUTO_ON:
-            case APP_FORCE_ON:
-                // - sprawdzenie napięcia - on
-                if (is_bulb_on_voltage_ok()) {
-                    set_led_on();
-                } else {
-                    if (is_led_on()) {
-                        led_interval = INTERVAL_FOUR_FIFTH_SECOND;
-                        set_led_off();
-                    } else {
-                        led_interval = INTERVAL_FIFTH_SECOND;
-                        set_led_on();
-                    }
-                }
-                break;
-            case APP_WAITING_FOR_BULB_OFF:
-            case APP_AUTO_BRIGHTENING:
-            case APP_FORCE_BRIGHTENING:
-                // miganie
-                led_interval = INTERVAL_HALF_A_SECOND;
-                if (is_led_on()) {
-                    set_led_off();
-                } else{
-                    set_led_on();
-                }
-                break;
-            case APP_FORCE_ON_STARTER:
-            case APP_DUMMY_STATUS:
-                break;
-        }
-    }
-    next_led_checkpoint = timer + led_interval;
-
     switch (app_state) {
         case APP_INIT:
             handle_app_init_state();
@@ -415,14 +349,91 @@ static inline void execute_state_transition_changes()
         case APP_FORCE_ON_STARTER:
             handle_app_force_on_starter_state();
             break;
-        case APP_DUMMY_STATUS:
-            break;
     }
-
-    // TODO: stan diody
-
 }
 
+static uint16_t blink_led(uint16_t on_duration, uint16_t off_duration)
+{
+    if (is_led_on()) {
+        set_led_off();
+        return off_duration;
+    } else{
+        set_led_on();
+        return on_duration;
+    }
+}
+
+static uint16_t execute_led_bulb_off()
+{
+    if (is_bulb_off_voltage_ok()) {
+        set_led_off();
+    } else {
+        return blink_led(INTERVAL_FIFTH_SECOND, INTERVAL_FOUR_FIFTH_SECOND);
+    }
+    return 0;
+}
+
+static uint16_t execute_led_bulb_on()
+{
+    if (is_bulb_on_voltage_ok()) {
+        set_led_on();
+    } else {
+        return blink_led(INTERVAL_FIFTH_SECOND, INTERVAL_FOUR_FIFTH_SECOND);
+    }
+    return 0;
+}
+
+static uint16_t execute_led_bulb_transition_up()
+{
+    // miganie 50%
+    return blink_led(INTERVAL_HALF_A_SECOND, INTERVAL_HALF_A_SECOND);
+}
+
+static uint16_t execute_led_bulb_transition_down()
+{
+    // miganie 80% / 20%
+    return blink_led(INTERVAL_FOUR_FIFTH_SECOND, INTERVAL_FIFTH_SECOND);
+}
+
+static void execute_led_changes()
+{
+    const uint16_t timer = get_timer_value();
+    if (get_accu_status() == STARTER_RUNNING) {
+        set_led_off();
+        next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
+        return ;
+    }
+    if (timer != next_led_checkpoint) {
+        return ;
+    }
+    uint16_t led_interval = 0;
+    switch (app_state) {
+        case APP_INIT:
+        case APP_FORCE_OFF:
+        case APP_AUTO_OFF:
+            // - sprawdzenie napięcia - off
+            led_interval = execute_led_bulb_off();
+            break;
+        case APP_AUTO_ON:
+        case APP_FORCE_ON:
+            // - sprawdzenie napięcia - on
+            led_interval = execute_led_bulb_on();
+            break;
+        case APP_WAITING_FOR_BULB_OFF:
+            // miganie 4/5
+            led_interval = execute_led_bulb_transition_down();
+            break;
+        case APP_AUTO_BRIGHTENING:
+        case APP_FORCE_BRIGHTENING:
+            // miganie 1/2
+            led_interval = execute_led_bulb_transition_up();
+            break;
+            break;
+        case APP_FORCE_ON_STARTER:
+            break;
+    }
+    next_led_checkpoint = timer + (led_interval == 0 ? INTERVAL_FIFTH_SECOND : led_interval);
+}
 
 static inline void emmit_debug_data()
 {
@@ -438,6 +449,7 @@ void loop_application_logic()
 {
     read_pin_values();
     read_adc_results();
+    execute_led_changes();
     execute_state_transition_changes();
     emmit_debug_data();
     launch_adc();
@@ -453,7 +465,6 @@ void loop_application_logic()
 }
 
 void init_application() {
-    const uint16_t timer = get_timer_value();
-    next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
-    app_state = APP_INIT;
+    next_led_checkpoint = INTERVAL_FIFTH_SECOND;
+    // app_state = APP_INIT;
 }

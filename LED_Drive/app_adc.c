@@ -13,6 +13,35 @@
 uint16_t accu_adc_result;
 uint16_t bulb_adc_result;
 
+accu_status_e get_accu_status()
+{
+    if (accu_adc_result < VOLTAGE_6_V) {
+        return UNKNOWN;
+    }
+    if (accu_adc_result < VOLTAGE_10_V) {
+        return STARTER_RUNNING;
+    }
+    if (accu_adc_result < VOLTAGE_13_V) {
+        return NORMAL;
+    }
+    return CHARGING;
+}
+
+bulb_actual_status_e get_bulb_actual_status()
+{
+    if (bulb_adc_result < VOLTAGE_0_1_V) {
+        return BULB_VOLTAGE_ZERO;
+    }
+    if (bulb_adc_result < VOLTAGE_3_V) {
+        return BULB_VOLTAGE_UNDER_LOAD;
+    }
+    if (bulb_adc_result > VOLTAGE_10_V) {
+        return BULB_VOLTAGE_FULL;
+    }
+    return BULB_VOLTAGE_UNKNOWN_READING;
+}
+
+
 static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t arg) {
     typedef uint8_t v2 __attribute__((vector_size (2)));
     v2 vec;
@@ -85,24 +114,26 @@ void adjust_target_pwm_value(uint8_t current,
         } else if (diff > 10) {
             diff = 10;
         }
-        uint16_t target = (uint16_t)current + (uint16_t)diff;
+        int16_t target = (int16_t)current + (int16_t)diff;
         if (target > 255) {
-            pm_consumer(255);
-        } else {
-            pm_consumer(target);
+            target = 255;
         }
+        pm_consumer(target);
         return ;
     }
 
-    const uint16_t max = VOLTAGE_13_1_V + VOLTAGE_0_05_V;
-    if (actual_bulb_voltage > max) {
+    const uint16_t max = VOLTAGE_13_1_V + VOLTAGE_0_05_V; // 0x389
+    if (actual_bulb_voltage > max) {                      // actual_bulb_voltage = max 0x3FF
         uint8_t diff = (actual_bulb_voltage - max) / 4;
         if (diff == 0) {
             diff = 1;
         } else if (diff > 10) {
             diff = 10;
         }
-        uint8_t target = current - diff;
+        int16_t target = (int16_t)current - (int16_t)diff;
+        if (target < 0) {
+            target = 0;
+        }
         pm_consumer(target);
         return ;
     }

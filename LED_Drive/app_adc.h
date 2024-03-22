@@ -46,54 +46,31 @@ static inline void adjust_target_pwm_value_2(
 }
 
 typedef enum __accu_status {
-    UNKNOWN,
-    // rozrusznik
-    STARTER_RUNNING,
     // brak ładowania
     NORMAL,
     // ładowanie
-    CHARGING
+    CHARGING,
+    // rozrusznik
+    STARTER_RUNNING,
+
+    UNKNOWN,
 } accu_status_e;
 
-static inline accu_status_e get_accu_status()
-{
-    if (accu_adc_result < VOLTAGE_6_V) {
-        return UNKNOWN;
-    }
-    if (accu_adc_result < VOLTAGE_10_V) {
-        return STARTER_RUNNING;
-    }
-    if (accu_adc_result < VOLTAGE_13_V) {
-        return NORMAL;
-    }
-    return CHARGING;
-}
+extern accu_status_e get_accu_status();
 
 typedef enum __bulb_actual_status {
-    // blisko zero V, przepalona żarówka lub bezpiczenik
-    BULB_VOLTAGE_ZERO,
-
     // do 3V, normalna praca
     BULB_VOLTAGE_UNDER_LOAD,
 
     // powyżej 10 V, wszystko ok, żarówka wyłączona
     BULB_VOLTAGE_FULL,
 
+    // blisko zero V, przepalona żarówka lub bezpiczenik
+    BULB_VOLTAGE_ZERO,
+
     BULB_VOLTAGE_UNKNOWN_READING
 } bulb_actual_status_e;
 
-static inline bulb_actual_status_e get_bulb_actual_status()
-{
-    if (bulb_adc_result < VOLTAGE_0_1_V) {
-        return BULB_VOLTAGE_ZERO;
-    }
-    if (bulb_adc_result < VOLTAGE_3_V) {
-        return BULB_VOLTAGE_UNDER_LOAD;
-    }
-    if (bulb_adc_result > VOLTAGE_10_V) {
-        return BULB_VOLTAGE_FULL;
-    }
-    return BULB_VOLTAGE_UNKNOWN_READING;
-}
+extern bulb_actual_status_e get_bulb_actual_status();
 
 #endif /* APP_ADC_H_ */
