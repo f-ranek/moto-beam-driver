@@ -43,7 +43,7 @@ uint16_t __timer_3ms_counter;
 // interrupt every 3 ms
 ISR (TIM1_COMPA_vect, ISR_NOBLOCK)
 {
-    PORTA |= _BV(7);
+    PORTA |= _BV(6);
     // do the job
     loop_application_logic();
 
@@ -51,5 +51,5 @@ ISR (TIM1_COMPA_vect, ISR_NOBLOCK)
     ++__timer_3ms_counter;
     // reset watchdog
     wdt_reset();
-    PORTA &= ~_BV(7);
+    PORTA &= ~_BV(6);
 }

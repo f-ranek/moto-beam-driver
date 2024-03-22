@@ -219,6 +219,9 @@
     <Compile Include="application.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="application.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="app_adc.c">
       <SubType>compile</SubType>
     </Compile>

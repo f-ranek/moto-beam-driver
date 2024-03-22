@@ -68,22 +68,24 @@ void setup_initial_port_status() {
     ACSR |= _BV(ACD);
 
     // 0 - WE przycisk
+
     // SPI interface
     // 4 - SCK
     // 5 - DO - data out
-    // 6 - DI - data in
+
+    // 6 - timer & adc debug bit
+    // 7 - LED
 
     // bit 1 to mark as output
-    DDRA = _BV(4) | _BV(5) | _BV(7);
+    DDRA = _BV(4) | _BV(5) | _BV(6) | _BV(7);
     // bit 1 to enable internal pullup on input, OUT on output
-    PORTA = _BV(0) | _BV(6);
+    PORTA = _BV(0);
 
     // Digital Input Disable Register 0
     // 1 - WE czujnik zmierzchu
     // 2 - WE aku
     // 3 - WE sensor świateł
-    // 7 - WY led
-    DIDR0 = _BV(1) | _BV(2) | _BV(3) | _BV(7);
+    DIDR0 = _BV(1) | _BV(2) | _BV(3);
 
     // 0 - WE olej
     // 1 - WE luz

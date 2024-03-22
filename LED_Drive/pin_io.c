@@ -16,6 +16,7 @@
 
 __pin_status __button_status;
 __pin_status __motorcycle_status;
+uint16_t next_btn_hold_checkpoint;
 
 static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles);
 static inline void read_button_value();
@@ -38,6 +39,17 @@ static inline void read_button_value()
     // czy poprzednio był wduszony, a teraz jest zwolniony?
     if (last_button_status && !new_button_status) {
         __button_interrupt_pending |= _BV(0);
+    }
+    if (last_button_status == new_button_status) {
+        if ((__button_interrupt_pending & _BV(3)) == 0) {
+            __button_interrupt_pending |= _BV(3);
+            next_btn_hold_checkpoint = get_timer_value() + INTERVAL_ONE_SECOND;
+        } else if (next_btn_hold_checkpoint == get_timer_value()) {
+            __button_interrupt_pending |= _BV(2);
+        }
+    } else {
+        __button_interrupt_pending &= ~_BV(2);
+        __button_interrupt_pending &= ~_BV(3);
     }
 }
 

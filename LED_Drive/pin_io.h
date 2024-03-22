@@ -26,6 +26,8 @@ extern __pin_status __motorcycle_status;
 
 // bit 0 - czy mamy przerwanie od przycisku
 // bit 1 - czy następne przerwanie należy zignorować
+// bit 2 - czy jest wciśnięty od 1 sek?
+// bit 3 - flaga oczkiwania na interwał 1 sek
 #define __button_interrupt_pending GPIOR0
 
 // zwraca bit opisujący stan ciśnienia oleju
@@ -45,7 +47,7 @@ static inline bool is_gear_engaged() {
 // zwraca oraz resetuje flagę informującą o zwolnieniu przycisku
 static inline bool exchange_button_release_flag() {
     uint8_t result = __button_interrupt_pending;
-    if (result == 3) {
+    if ((result&3) == 3) {
         // both interrupt and flag are set, reset both
         __button_interrupt_pending = 0;
         return false;
@@ -70,6 +72,12 @@ static inline bool exchange_button_pressed() {
     if (result) {
         ignore_next_button_release();
     }
+    return result;
+}
+
+static inline bool exchange_was_hold_for_1_sec() {
+    bool result = is_button_pressed() && (__button_interrupt_pending & _BV(2));
+    __button_interrupt_pending &= ~_BV(2);
     return result;
 }
 

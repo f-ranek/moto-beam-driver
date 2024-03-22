@@ -6,9 +6,50 @@
  */
 
 #include "app_adc.h"
+#include "adc.h"
+#include "application.h"
+#include "timer.h"
 
 uint16_t accu_adc_result;
 uint16_t bulb_adc_result;
+
+static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t arg) {
+    typedef uint8_t v2 __attribute__((vector_size (2)));
+    v2 vec;
+    vec[0] = arg >> 8;
+    vec[1] = arg;
+    return (uint16_t)vec;
+}
+
+static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
+{
+    if (old_val == 0) {
+        return new_val;
+        } else {
+        return (new_val + 3 * old_val) / 4;
+    }
+}
+
+static uint16_t next_adc_counter_read_timeline;
+void read_adc_results()
+{
+    if (is_bulb_adc_result_ready()) {
+        bulb_adc_result = smooth_value(bulb_adc_result, get_bulb_adc_result());
+        app_debug_status.bulb_voltage_lo = bulb_adc_result;
+        app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0x0F) | ((reverse_bytes(bulb_adc_result) & 0x0F) << 4);
+    }
+    if (is_accu_adc_result_ready()) {
+        accu_adc_result = smooth_value(accu_adc_result, get_accu_adc_result());
+        app_debug_status.accu_voltage_lo = accu_adc_result;
+        app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
+    }
+
+    const uint16_t timer = get_timer_value();
+    if (timer == next_adc_counter_read_timeline) {
+        next_adc_counter_read_timeline = timer + INTERVAL_ONE_SECOND;
+        app_debug_status.adc_count = reverse_bytes(exchange_adc_count());
+    }
+}
 
 /*
 // tu by się przydało takie wyliczenie, że z bieżących wartości
@@ -23,7 +64,6 @@ static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
     return 503 - (35 * accu_adc_result) / 128;
 }
 */
-
 
 void adjust_target_pwm_value(uint8_t current,
     uint16_t accu_adc_result, uint16_t bulb_adc_result,
@@ -68,4 +108,17 @@ void adjust_target_pwm_value(uint8_t current,
     }
 
     // nic nie trzeba robić
+}
+
+void launch_adc()
+{
+    // odpalamy co 6 ms
+    switch (get_timer_value() & 3) {
+        case 0:
+        launch_bulb_adc();
+        break;
+        case 2:
+        launch_accu_adc();
+        break;
+    }
 }
