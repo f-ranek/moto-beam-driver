@@ -64,4 +64,13 @@ static inline void ignore_next_button_release() {
     __button_interrupt_pending |= _BV(1);
 }
 
+// zwraca oraz resetuje flagę informującą o wduszeniu przycisku
+static inline bool exchange_button_pressed() {
+    bool result = is_button_pressed();
+    if (result) {
+        ignore_next_button_release();
+    }
+    return result;
+}
+
 #endif /* PIN_IO_H_ */
