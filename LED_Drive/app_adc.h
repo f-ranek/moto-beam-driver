@@ -76,7 +76,7 @@ typedef enum __bulb_actual_status {
     // do 3V, normalna praca
     BULB_VOLTAGE_UNDER_LOAD,
 
-    // powyżej 6 V, wszystko ok, żarówka wyłączona
+    // powyżej 10 V, wszystko ok, żarówka wyłączona
     BULB_VOLTAGE_FULL,
 
     BULB_VOLTAGE_UNKNOWN_READING
@@ -90,7 +90,7 @@ static inline bulb_actual_status_e get_bulb_actual_status()
     if (bulb_adc_result < VOLTAGE_3_V) {
         return BULB_VOLTAGE_UNDER_LOAD;
     }
-    if (bulb_adc_result > VOLTAGE_6_V) {
+    if (bulb_adc_result > VOLTAGE_10_V) {
         return BULB_VOLTAGE_FULL;
     }
     return BULB_VOLTAGE_UNKNOWN_READING;
