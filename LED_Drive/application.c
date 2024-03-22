@@ -35,29 +35,29 @@ static enum app_state_e {
     APP_INIT,
 
     // 2 - force off by user
-    APP_BULB_OFF,
+    APP_FORCE_OFF,
 
     // 3 - transition between off and on
-    APP_BULB_BRIGHTENING,
+    APP_AUTO_BRIGHTENING,
 
     // 4 - bulb at proper power (13,2 V)
-    APP_BULB_ON,
+    APP_AUTO_ON,
 
     // 5 - still on, but waiting for being off
     APP_WAITING_FOR_BULB_OFF,
 
     // 6 - automatic off, subject to auto on
-    APP_AUTO_OFF
-} app_state;
+    APP_AUTO_OFF,
 
-/*
-enum led_state_e {
-    LED_OFF_WITH_TEST,
-    LED_ON_WITH_TEST,
-    LED_BULB_BRIGHTENING,
-    LED_TEST_BULB_FOLLOW_BEAM
-} led_state;
-*/
+    // 7 - transition between off and on
+    APP_FORCE_BRIGHTENING,
+
+    // 8 - bulb at proper power (13,2 V)
+    APP_FORCE_ON,
+
+    // 9 - forced on, but starter running
+    APP_FORCE_ON_STARTER
+} app_state;
 
 static inline bool is_oil_or_charging()
 {
@@ -69,13 +69,13 @@ static inline bool is_oil_or_charging()
 
 static uint16_t next_bulb_checkpoint;
 static uint16_t next_led_checkpoint;
+
 static inline void start_bulb_brightening()
 {
     // TODO: sekunda przed rozpoczęciem rozjaśniania
     const uint16_t timer = get_timer_value();
     start_bulb_pwm(1);
     next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
-    app_state = APP_BULB_BRIGHTENING;
 
     set_led_on();
     next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
@@ -93,40 +93,51 @@ static inline void handle_app_init_state()
 {
     // prawdopodobnie coś jebło, a jedziemy - od razu 100%
     if (was_unexpected_reset() && is_gear_engaged() && is_oil_or_charging()) {
-        app_state = APP_BULB_ON;
+        app_state = APP_AUTO_ON;
         start_bulb_pwm(220);
         set_led_on();
         return ;
     }
+
     bool btn = exchange_button_release_flag();
-    if (btn || is_oil_or_charging()) {
-        start_bulb_brightening();
+    if (is_gear_engaged() && is_button_pressed()) {
+        ignore_next_button_release();
+        app_state = APP_FORCE_OFF;
         return ;
     }
-    if (is_gear_engaged() && exchange_button_pressed()) {
-        app_state = APP_BULB_OFF;
+
+    if (btn) {
+        start_bulb_brightening();
+        app_state = APP_AUTO_BRIGHTENING;
+        return ;
+    }
+
+    if (is_gear_engaged() && is_oil_or_charging()) {
+        start_bulb_brightening();
+        app_state = APP_AUTO_BRIGHTENING;
         return ;
     }
 }
 
 // ręczne wyłączenie
-static inline void handle_app_bulb_off_state()
+static inline void handle_app_force_off_state()
 {
     // tylko naciśnięcie włącza
     if (exchange_button_release_flag()) {
         start_bulb_brightening();
+        app_state = APP_AUTO_BRIGHTENING;
         return ;
     }
 }
 
 // rozjaśnianie
-static inline void handle_app_bulb_brightening_state()
+static inline void handle_app_auto_brightening_state()
 {
     const uint16_t timer = get_timer_value();
 
     // naciśnięcie wyłącza
     if (exchange_button_release_flag()) {
-        app_state = APP_BULB_OFF;
+        app_state = APP_FORCE_OFF;
         set_bulb_on_off(false);
         next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
         set_led_off();
@@ -148,19 +159,19 @@ static inline void handle_app_bulb_brightening_state()
             next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
             // koniec rozjaśniania
-            app_state = APP_BULB_ON;
+            app_state = APP_AUTO_ON;
         }
     }
 }
 
 // żarówka włączona
-static inline void handle_app_bulb_on_state()
+static inline void handle_app_auto_on_state()
 {
     const uint16_t timer = get_timer_value();
 
     // naciśnięcie wyłącza
     if (exchange_button_release_flag()) {
-        app_state = APP_BULB_OFF;
+        app_state = APP_FORCE_OFF;
         set_bulb_on_off(false);
         next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
         set_led_off();
@@ -194,7 +205,7 @@ static inline void handle_app_waiting_for_bulb_off_state()
 
     // naciśnięcie zostawia włączoną
     if (exchange_button_release_flag()) {
-        app_state = APP_BULB_ON;
+        app_state = APP_FORCE_ON;
         set_led_on();
         return ;
     }
@@ -208,6 +219,13 @@ static inline void handle_app_waiting_for_bulb_off_state()
         return ;
     }
 
+    accu_status_e accu_status = get_accu_status();
+    if (accu_status == STARTER_RUNNING) {
+        app_state = APP_AUTO_OFF;
+        set_bulb_on_off(false);
+        return ;
+    }
+
     if (timer == next_bulb_checkpoint) {
         app_state = APP_AUTO_OFF;
         set_bulb_on_off(false);
@@ -218,9 +236,77 @@ static inline void handle_app_waiting_for_bulb_off_state()
 // żarówka automatycznie wyłączona
 static inline void handle_app_auto_off_state()
 {
-    bool btn = exchange_button_release_flag();
-    if (btn || is_gear_engaged() || is_oil_or_charging()) {
+    if (exchange_button_release_flag()) {
         start_bulb_brightening();
+        app_state = APP_FORCE_BRIGHTENING;
+        return ;
+    }
+    if (is_gear_engaged() && is_oil_or_charging()) {
+        start_bulb_brightening();
+        app_state = APP_AUTO_BRIGHTENING;
+        return ;
+    }
+}
+
+// wymuszenie włączenia, rozjaśnia się
+static inline void handle_app_force_brightening_state()
+{
+    const uint16_t timer = get_timer_value();
+
+    // naciśnięcie wyłącza - bz.
+    if (exchange_button_release_flag()) {
+        app_state = APP_FORCE_OFF;
+        set_bulb_on_off(false);
+        next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
+        set_led_off();
+        return ;
+    }
+
+    if (get_accu_status() == STARTER_RUNNING) {
+        app_state = APP_FORCE_ON_STARTER; // zm.
+        set_bulb_on_off(false);
+        return ;
+    }
+
+    if (timer == next_bulb_checkpoint) {
+        // TODO: sekunda przed rozpoczęciem rozjaśniania
+        // rozjaśnianie
+        uint8_t current_power = get_bulb_pwm_duty_cycle();
+        if (current_power < 220) {
+            adjust_bulb_power(current_power + 1);
+            next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
+        } else {
+            // koniec rozjaśniania
+            app_state = APP_FORCE_ON; // zm.
+         }
+    }
+
+}
+
+// wymuszenie włączenia, włączona
+static inline void handle_app_force_on_state()
+{
+    // naciśnięcie przełącza w tryb auto
+    if (exchange_button_release_flag()) {
+        app_state = APP_AUTO_ON;
+        return ;
+    }
+
+    if (get_accu_status() == STARTER_RUNNING) {
+        app_state = APP_FORCE_ON_STARTER;
+        set_bulb_on_off(false);
+        return ;
+    }
+}
+
+// wymuszenie włączenia, ale kręci rozrusznik
+static inline void handle_app_force_on_starter_state()
+{
+    // naciśnięcie przełącza w tryb auto
+    bool btn = exchange_button_release_flag();
+    if (btn || is_oil_or_charging()) {
+        start_bulb_brightening();
+        app_state = APP_FORCE_BRIGHTENING;
         return ;
     }
 }
@@ -238,7 +324,7 @@ static inline bool is_bulb_on_voltage_ok()
 static inline void flip_led()
 {
     if (is_led_on()) {
-        set_led_off();
+
     } else {
         set_led_on();
     }
@@ -246,72 +332,88 @@ static inline void flip_led()
 
 static inline void execute_state_transition_changes()
 {
-    uint16_t timer = get_timer_value();
+    const uint16_t timer = get_timer_value();
+    uint16_t led_interval = INTERVAL_FIFTH_SECOND;
     if (get_accu_status() == STARTER_RUNNING) {
         set_led_off();
-        next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
     } else if (timer == next_led_checkpoint){
         switch (app_state) {
             case APP_INIT:
-            case APP_BULB_OFF:
+            case APP_FORCE_OFF:
             case APP_AUTO_OFF:
                 // - sprawdzenie napięcia - off
-                if (is_bulb_on_voltage_ok()) {
+                if (is_bulb_off_voltage_ok()) {
                     set_led_off();
                 } else {
                     if (is_led_on()) {
-                        next_led_checkpoint = timer + INTERVAL_FOUR_FIFTH_SECOND;
+                        led_interval = INTERVAL_FOUR_FIFTH_SECOND;
+                        set_led_off();
                     } else{
-                        next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
+                        led_interval = INTERVAL_FIFTH_SECOND;
+                        set_led_on();
                     }
-                    flip_led();
                 }
                 break;
-            case APP_BULB_ON:
-            case APP_WAITING_FOR_BULB_OFF:
+            case APP_AUTO_ON:
+            case APP_FORCE_ON:
                 // - sprawdzenie napięcia - on
                 if (is_bulb_on_voltage_ok()) {
                     set_led_on();
                 } else {
                     if (is_led_on()) {
-                        next_led_checkpoint = timer + INTERVAL_FOUR_FIFTH_SECOND;
+                        led_interval = INTERVAL_FOUR_FIFTH_SECOND;
+                        set_led_off();
                     } else {
-                        next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
+                        led_interval = INTERVAL_FIFTH_SECOND;
+                        set_led_on();
                     }
-                    flip_led();
                 }
                 break;
-            case APP_BULB_BRIGHTENING:
-                next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
-                flip_led();
+            case APP_WAITING_FOR_BULB_OFF:
+            case APP_AUTO_BRIGHTENING:
+            case APP_FORCE_BRIGHTENING:
                 // miganie
+                led_interval = INTERVAL_HALF_A_SECOND;
+                if (is_led_on()) {
+                    set_led_off();
+                } else{
+                    set_led_on();
+                }
                 break;
+            case APP_FORCE_ON_STARTER:
             case APP_DUMMY_STATUS:
                 break;
         }
     }
-
-
-
+    next_led_checkpoint = timer + led_interval;
 
     switch (app_state) {
         case APP_INIT:
             handle_app_init_state();
             break;
-        case APP_BULB_OFF:
-            handle_app_bulb_off_state();
+        case APP_FORCE_OFF:
+            handle_app_force_off_state();
             break;
-        case APP_BULB_BRIGHTENING:
-            handle_app_bulb_brightening_state();
+        case APP_AUTO_BRIGHTENING:
+            handle_app_auto_brightening_state();
             break;
-        case APP_BULB_ON:
-            handle_app_bulb_on_state();
+        case APP_AUTO_ON:
+            handle_app_auto_on_state();
             break;
         case APP_WAITING_FOR_BULB_OFF:
             handle_app_waiting_for_bulb_off_state();
             break;
         case APP_AUTO_OFF:
             handle_app_auto_off_state();
+            break;
+        case APP_FORCE_BRIGHTENING:
+            handle_app_force_brightening_state();
+            break;
+        case APP_FORCE_ON:
+            handle_app_force_on_state();
+            break;
+        case APP_FORCE_ON_STARTER:
+            handle_app_force_on_starter_state();
             break;
         case APP_DUMMY_STATUS:
             break;
@@ -351,7 +453,7 @@ void loop_application_logic()
 }
 
 void init_application() {
-    uint16_t timer = get_timer_value();
-    next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
+    const uint16_t timer = get_timer_value();
+    next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
     app_state = APP_INIT;
 }

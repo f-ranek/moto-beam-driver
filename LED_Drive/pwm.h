@@ -59,6 +59,8 @@ static inline void adjust_bulb_power(uint8_t duty_cycle) {
 // włącza światła i ustawia je na wybrany ułamek mocy
 static inline void start_bulb_pwm(uint8_t duty_cycle)
 {
+    // 1 - zgaszone
+    PORTB |= _BV(2);
     adjust_bulb_power(duty_cycle);
     // aktywacja wyjścia PWM
     // Table 11-3. Compare Output Mode, Fast PWM Mode

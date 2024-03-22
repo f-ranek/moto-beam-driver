@@ -25,14 +25,10 @@ FUSES =
     .extended = EFUSE_DEFAULT,
 };
 
-// setup initial device status
-static inline void setup_initial_port_status();
-
 #ifdef SIMULATION
 
 int main(void)
 {
-    setup_initial_port_status();
     start_pwm();
     init_application();
 
@@ -46,7 +42,6 @@ int main(void)
 #else // !SIMULATION
 int main(void)
 {
-    setup_initial_port_status();
     setup_timer_3ms();
     start_pwm();
     init_application();
@@ -60,7 +55,8 @@ int main(void)
 }
 #endif // SIMULATION
 
-void setup_initial_port_status() {
+// setup initial device status
+static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
     // Analog Comparator Disable
     ACSR |= _BV(ACD);
 
@@ -102,9 +98,7 @@ void initial_setup()
     // read reset cause
     MCUSR_initial_copy = MCUSR;
     MCUSR = 0;
-    // reset watchdog
-    // by default, it times out after 15 ms, which is fine
-    wdt_reset();
+
     // setup clock prescaler
     // Table 6-11. Clock Prescaler Select
     // 0000 - no prescaler - 8 MHz
@@ -115,4 +109,10 @@ void initial_setup()
     CLKPR = _BV(CLKPCE);
     // write actual value - 4MHz
     CLKPR = _BV(CLKPS0);
+
+    setup_initial_port_status();
+
+    // reset watchdog
+    // by default, it times out after 15 ms, which is fine
+    wdt_reset();
 }
