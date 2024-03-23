@@ -33,6 +33,8 @@ inline uint16_t get_timer_value() {
 #define INTERVAL_FIFTH_SECOND ((uint16_t)(200 / 3))
 #define INTERVAL_FOUR_FIFTH_SECOND ((uint16_t)(INTERVAL_ONE_SECOND - INTERVAL_FIFTH_SECOND))
 #define INTERVAL_HALF_A_SECOND ((uint16_t)(500 / 3))
-#define INTERVAL_ONE_TENTH_SECOND ((uint16_t)(100 / 3))
+
+#define INTERVAL_1_20_SECOND ((uint16_t)(50 / 3))
+#define INTERVAL_19_20_SECOND ((uint16_t)(INTERVAL_ONE_SECOND - INTERVAL_1_20_SECOND))
 
 #endif /* TIMER_H_ */

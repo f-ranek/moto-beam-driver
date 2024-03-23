@@ -98,14 +98,14 @@ static void handle_app_init_state()
         return ;
     }
 
-    bool btn = exchange_button_release_flag();
+    const bool btn = exchange_button_release_flag();
     if (is_gear_engaged() && is_button_pressed()) {
         ignore_next_button_release();
         app_state = APP_FORCE_OFF;
         return ;
     }
 
-    bool oil_or_charging = is_oil_or_charging();
+    const bool oil_or_charging = is_oil_or_charging();
     if ((is_gear_engaged() && oil_or_charging) || (btn && oil_or_charging)) {
         start_bulb_brightening();
         app_state = APP_AUTO_BRIGHTENING;
@@ -181,7 +181,7 @@ static void handle_app_auto_on_state()
         return ;
     }
 
-    accu_status_e accu_status = get_accu_status();
+    const accu_status_e accu_status = get_accu_status();
     if (accu_status == STARTER_RUNNING) {
         app_state = APP_AUTO_OFF;
         set_bulb_on_off(false);
@@ -215,7 +215,7 @@ static void handle_app_waiting_for_bulb_off_state()
     }
 
     // przytrzymanie gasi od razu
-    if (exchange_was_hold_for_1_sec()) {
+    if (exchange_was_btn_hold_for_1_sec()) {
         ignore_next_button_release();
         app_state = APP_AUTO_OFF;
         set_bulb_on_off(false);
@@ -224,7 +224,7 @@ static void handle_app_waiting_for_bulb_off_state()
         return ;
     }
 
-    accu_status_e accu_status = get_accu_status();
+    const accu_status_e accu_status = get_accu_status();
     if (accu_status == STARTER_RUNNING) {
         app_state = APP_AUTO_OFF;
         set_bulb_on_off(false);
@@ -261,7 +261,8 @@ static void handle_app_force_brightening_state()
     const uint16_t timer = get_timer_value();
 
     // naciśnięcie wyłącza - bz.
-    if (exchange_button_release_flag()) {
+    if (exchange_button_release_flag() || exchange_was_btn_hold_for_1_sec()) {
+        ignore_next_button_release();
         app_state = APP_FORCE_OFF;
         set_bulb_on_off(false);
         next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
@@ -295,16 +296,26 @@ static void handle_app_force_brightening_state()
 static void handle_app_force_on_state()
 {
     // naciśnięcie przełącza w tryb auto
-    bool btn = exchange_button_release_flag();
-    bool oil_or_charging = is_oil_or_charging();
+    const bool btn = exchange_button_release_flag();
+
+    if (exchange_was_btn_hold_for_1_sec()) {
+        ignore_next_button_release();
+        app_state = APP_FORCE_OFF;
+        return ;
+    }
+
+    const bool oil_or_charging = is_oil_or_charging();
+    const uint16_t timer = get_timer_value();
 
     if (btn && oil_or_charging) {
+        set_led_off();
+        next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
         app_state = APP_AUTO_ON;
         return ;
     }
 
     if (btn && !oil_or_charging) {
-        app_state = APP_FORCE_OFF;
+        app_state = APP_AUTO_OFF;
         return ;
     }
 
@@ -314,7 +325,6 @@ static void handle_app_force_on_state()
         return ;
     }
 
-    const uint16_t timer = get_timer_value();
     // co 48 ms
     if ((timer & 0xF) == 0xF) {
         adjust_target_pwm_value_2(
@@ -323,16 +333,23 @@ static void handle_app_force_on_state()
     }
 }
 
-// wymuszenie włączenia, ale kręci rozrusznik
+// wymuszenie włączenia, ale kręci rozrusznik lub nie ma ładowania
 // 8
 static void handle_app_force_on_starter_state()
 {
     // naciśnięcie przełącza w tryb auto
-    bool btn = exchange_button_release_flag();
+    const bool btn = exchange_button_release_flag();
     if (btn || is_oil_or_charging()) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;
+    }
+    if (exchange_was_btn_hold_for_1_sec()) {
+        app_state = APP_FORCE_OFF;
+        set_led_on();
+        next_led_checkpoint = get_timer_value() + INTERVAL_FIFTH_SECOND;
+        return ;
+
     }
 }
 
@@ -414,7 +431,7 @@ static uint16_t execute_led_bulb_on()
     if (is_bulb_on_voltage_ok()) {
         set_led_on();
     } else {
-        return blink_led(INTERVAL_FIFTH_SECOND, INTERVAL_FOUR_FIFTH_SECOND);
+        return blink_led(INTERVAL_19_20_SECOND, INTERVAL_1_20_SECOND);
     }
     return 0;
 }
@@ -450,6 +467,8 @@ static void execute_led_changes()
             // 1
         case APP_AUTO_OFF:
             // 5
+        case APP_FORCE_ON_STARTER:
+            // 8
             // - sprawdzenie napięcia - off
             led_interval = execute_led_bulb_off();
             break;
@@ -471,9 +490,6 @@ static void execute_led_changes()
             // 6
             // miganie 1/2
             led_interval = execute_led_bulb_transition_up();
-            break;
-        case APP_FORCE_ON_STARTER:
-            // 8
             break;
     }
     next_led_checkpoint = timer + (led_interval == 0 ? INTERVAL_FIFTH_SECOND : led_interval);

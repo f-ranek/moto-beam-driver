@@ -29,7 +29,16 @@ accu_status_e get_accu_status()
 
 bulb_actual_status_e get_bulb_actual_status()
 {
-    if (bulb_adc_result < VOLTAGE_0_1_V) {
+    if (bulb_adc_result < VOLTAGE_0_05_V) {
+        // teoretycznie, przy IFRZ44N
+        // oporność w stanie przewodzenia 17 mOhm
+        // przy żarówce 55 W pobierającej 4 A
+        // to daje niecałe 70 mV
+        // a jeszcze weźmy pod uwagę błędy ADC
+        //
+        // dla IRF540N było 44 mOhm,
+        // ale z jakiegoś powodu wychodził
+        // większy spadek napięcia
         return BULB_VOLTAGE_ZERO;
     }
     if (bulb_adc_result < VOLTAGE_3_V) {
@@ -54,7 +63,7 @@ static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
 {
     if (old_val == 0) {
         return new_val;
-        } else {
+    } else {
         return (new_val + old_val) / 2;
     }
 }
