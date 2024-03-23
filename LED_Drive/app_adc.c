@@ -55,7 +55,7 @@ static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
     if (old_val == 0) {
         return new_val;
         } else {
-        return (new_val + 3 * old_val) / 4;
+        return (new_val + old_val) / 2;
     }
 }
 
