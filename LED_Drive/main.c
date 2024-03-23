@@ -37,6 +37,7 @@ int main(void)
         loop_application_logic();
         ++__timer_3ms_counter;
         wdt_reset();
+        sei();
     }
 }
 #else // !SIMULATION
@@ -66,13 +67,13 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
     // 4 - SCK
     // 5 - DO - data out
 
-    // 6 - timer & adc debug bit
+    // 6 - morse debug bit
     // 7 - LED
 
     // bit 1 to mark as output
     DDRA = _BV(4) | _BV(5) | _BV(6) | _BV(7);
     // bit 1 to enable internal pullup on input, OUT on output
-    PORTA = _BV(0);
+    PORTA = _BV(0) | _BV(6);
 
     // Digital Input Disable Register 0
     // 1 - WE czujnik zmierzchu

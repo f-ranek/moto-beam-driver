@@ -495,6 +495,106 @@ static void execute_led_changes()
     next_led_checkpoint = timer + (led_interval == 0 ? INTERVAL_FIFTH_SECOND : led_interval);
 }
 
+#ifndef SIMULATION
+
+// 138 ms
+#define INTERVAL_MORSE_DOT    ((uint8_t)46)
+// 414 ms
+#define INTERVAL_MORSE_DASH   ((uint8_t)(3 * INTERVAL_MORSE_DOT))
+// 2 sek - tu musi być na tyle czasu, żeby zmieścić całą literę plus przerwa
+#define INTERVAL_MORSE_SYM    ((uint16_t)(2000 / 3))
+
+#else // !SIMULATION
+
+#define INTERVAL_MORSE_DOT    ((uint8_t)1)
+#define INTERVAL_MORSE_DASH   ((uint8_t)(3 * INTERVAL_MORSE_DOT))
+#define INTERVAL_MORSE_SYM    ((uint16_t)(20))
+
+#endif // SIMULATION
+
+#define MAKE_MORSE_3(A,B,C) 0b00 ## C ## B ## A
+#define RESOVLE_MORSE_0(A)  0b ## A
+
+#define MAKE_MORSE(A,B,C)   MAKE_MORSE_3(A,B,C)
+#define RESOVLE_MORSE(A)    RESOVLE_MORSE_0(A)
+
+#define M_DOT      10
+#define M_DASH     11
+#define M_NONE     00
+
+static const uint8_t MORSE_CODES[9] PROGMEM = {
+    // 0 - R   • — •
+    MAKE_MORSE (M_DOT, M_DASH, M_DOT),
+
+    // 1 - E   •
+    MAKE_MORSE (M_DOT, M_NONE, M_NONE),
+
+    // 2 - A   • —
+    MAKE_MORSE (M_DOT, M_DASH, M_NONE),
+
+    // 3 - M   — —
+    MAKE_MORSE (M_DASH, M_DASH, M_NONE),
+
+    // 4 - N   — •
+    MAKE_MORSE (M_DASH, M_DOT, M_NONE),
+
+    // 5 - I   • •
+    MAKE_MORSE (M_DOT, M_DOT, M_NONE),
+
+    // 6 - U   • • —
+    MAKE_MORSE (M_DOT, M_DOT, M_DASH),
+
+    // 7 - O   — — —
+    MAKE_MORSE (M_DASH, M_DASH, M_DASH),
+
+    // 8 - S   • • •
+    MAKE_MORSE (M_DOT, M_DOT, M_DOT),
+};
+
+static uint16_t morse_next_emmission;
+static uint16_t morse_next_flip;
+static uint8_t  morse_symbol;
+static inline void emmit_status_code()
+{
+    const uint16_t timer = get_timer_value();
+    if (morse_next_emmission == timer) {
+        const uint8_t app_status = app_state;
+        if (app_status < sizeof(MORSE_CODES)) {
+            morse_next_flip = timer;
+            morse_symbol = pgm_read_byte(&(MORSE_CODES[app_status]));
+        } else {
+            // nothing to emmit
+            morse_symbol = 0;
+        }
+        morse_next_emmission = timer + INTERVAL_MORSE_SYM;
+        clear_debug_bit();
+    }
+    if (morse_next_flip == timer) {
+        if (is_debug_bit_set()) {
+            // nowy symbol - stała przerwa
+            morse_next_flip = timer + (uint16_t)INTERVAL_MORSE_DOT;
+            morse_symbol >>= 2;
+            clear_debug_bit();
+            return ;
+        }
+        const uint8_t morse_code = morse_symbol & 0x03;
+        // początek symbolu
+        switch(morse_code) {
+            case RESOVLE_MORSE(M_DOT):
+                morse_next_flip = timer + (uint16_t)INTERVAL_MORSE_DOT;
+                set_debug_bit();
+                break;
+            case RESOVLE_MORSE(M_DASH):
+                morse_next_flip = timer + (uint16_t)INTERVAL_MORSE_DASH;
+                set_debug_bit();
+                break;
+            default:
+                clear_debug_bit();
+                break;
+        }
+    }
+}
+
 static inline void emmit_debug_data()
 {
     app_debug_status.bulb_pwm = get_bulb_power();
@@ -512,6 +612,7 @@ void loop_application_logic()
     execute_led_changes();
     execute_state_transition_changes();
     emmit_debug_data();
+    emmit_status_code();
     launch_adc();
 
     // was_unexpected_reset must return true (if should)

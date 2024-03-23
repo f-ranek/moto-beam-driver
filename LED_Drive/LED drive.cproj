@@ -15,7 +15,7 @@
     <AssemblyName>GccApplication1</AssemblyName>
     <Name>LED drive</Name>
     <RootNamespace>GccApplication1</RootNamespace>
-    <ToolchainFlavour>Native</ToolchainFlavour>
+    <ToolchainFlavour>AVR_13.2.0</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
     <CacheFlash>true</CacheFlash>
@@ -127,7 +127,8 @@
     </ToolchainSettings>
     <OutputFileName>led_drive</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
-    <PostBuildEvent>$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
+    <PostBuildEvent>$(ToolchainDir)\avr-size "$(OutputFileName)$(OutputFileExtension)"
+$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -171,15 +172,16 @@
     </ToolchainSettings>
     <OutputFileName>led_drive</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
-    <PostBuildEvent>$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
+    <PostBuildEvent>$(ToolchainDir)\avr-size "$(OutputFileName)$(OutputFileExtension)"
+$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Simulation' ">
     <ToolchainSettings>
       <AvrGcc>
         <avrgcc.common.Device>-mmcu=attiny84a -B "%24(PackRepoDir)\atmel\ATtiny_DFP\2.0.368\gcc\dev\attiny84a"</avrgcc.common.Device>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+        <avrgcc.common.outputfiles.hex>False</avrgcc.common.outputfiles.hex>
         <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+        <avrgcc.common.outputfiles.eep>False</avrgcc.common.outputfiles.eep>
         <avrgcc.common.outputfiles.srec>False</avrgcc.common.outputfiles.srec>
         <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
         <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
@@ -195,6 +197,7 @@
             <Value>%24(PackRepoDir)\atmel\ATtiny_DFP\2.0.368\include\</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
+        <avrgcc.compiler.optimization.OtherFlags>-finline-functions-called-once -finline-small-functions</avrgcc.compiler.optimization.OtherFlags>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
@@ -213,7 +216,9 @@
         <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
       </AvrGcc>
     </ToolchainSettings>
-    <OutputPath>bin\Simulation\</OutputPath>
+    <OutputPath>Simulation\</OutputPath>
+    <OutputFileName>led_drive</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="adc.c">

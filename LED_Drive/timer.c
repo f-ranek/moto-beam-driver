@@ -37,13 +37,14 @@ void setup_timer_3ms()
     TCCR1B = _BV(WGM12) | _BV(CS11);
 }
 
+#ifndef SIMULATION
+
 // maks 196 sekund
 uint16_t __timer_3ms_counter;
 
 // interrupt every 3 ms
 ISR (TIM1_COMPA_vect, ISR_NOBLOCK)
 {
-    PORTA |= _BV(6);
     // do the job
     loop_application_logic();
 
@@ -51,5 +52,6 @@ ISR (TIM1_COMPA_vect, ISR_NOBLOCK)
     ++__timer_3ms_counter;
     // reset watchdog
     wdt_reset();
-    PORTA &= ~_BV(6);
 }
+
+#endif

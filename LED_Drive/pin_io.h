@@ -81,4 +81,27 @@ static inline bool exchange_was_btn_hold_for_1_sec() {
     return result;
 }
 
+/* ----------------------------------------- */
+
+static inline void set_debug_bit()
+{
+    PORTA &= ~_BV(6);
+}
+
+static inline void clear_debug_bit()
+{
+    PORTA |= _BV(6);
+}
+
+static inline void flip_debug_bit()
+{
+    PINA |= _BV(6);
+}
+
+static inline bool is_debug_bit_set()
+{
+    return (PORTA & _BV(6)) == 0;
+}
+
+
 #endif /* PIN_IO_H_ */

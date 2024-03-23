@@ -155,7 +155,6 @@ uint16_t get_accu_adc_result()
 // adc done interrupt
 ISR (ADC_vect, ISR_BLOCK)
 {
-    PINA |= _BV(6);
     __adc_count++;
     if(__adc_source == ADC_SOURCE_ACCU) {
         // akumulator
@@ -171,6 +170,5 @@ ISR (ADC_vect, ISR_BLOCK)
         __adc_source -= 0x10;
     }
 
-    wdt_reset(); // TEMP
-    PINA |= _BV(6);
+    // wdt_reset(); // TEMP
 }
