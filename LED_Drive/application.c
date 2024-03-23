@@ -124,9 +124,16 @@ static void handle_app_init_state()
 static void handle_app_force_off_state()
 {
     // tylko naciśnięcie włącza
-    if (exchange_button_release_flag()) {
+    const bool btn = exchange_button_release_flag();
+    const bool oil_or_charging = is_oil_or_charging();
+    if (btn && oil_or_charging) {
         start_bulb_brightening();
         app_state = APP_AUTO_BRIGHTENING;
+        return ;
+    }
+    if (btn && !oil_or_charging) {
+        start_bulb_brightening();
+        app_state = APP_FORCE_BRIGHTENING;
         return ;
     }
 }
@@ -138,7 +145,8 @@ static void handle_app_auto_brightening_state()
     const uint16_t timer = get_timer_value();
 
     // naciśnięcie wyłącza
-    if (exchange_button_release_flag()) {
+    if (exchange_button_release_flag() || exchange_was_btn_hold_for_1_sec()) {
+        ignore_next_button_release();
         app_state = APP_FORCE_OFF;
         set_bulb_on_off(false);
         next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
@@ -173,7 +181,8 @@ static void handle_app_auto_on_state()
     const uint16_t timer = get_timer_value();
 
     // naciśnięcie wyłącza
-    if (exchange_button_release_flag()) {
+    if (exchange_button_release_flag() || exchange_was_btn_hold_for_1_sec()) {
+        ignore_next_button_release();
         app_state = APP_FORCE_OFF;
         set_bulb_on_off(false);
         next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
@@ -300,6 +309,7 @@ static void handle_app_force_on_state()
 
     if (exchange_was_btn_hold_for_1_sec()) {
         ignore_next_button_release();
+        set_bulb_on_off(false);
         app_state = APP_FORCE_OFF;
         return ;
     }
@@ -316,6 +326,7 @@ static void handle_app_force_on_state()
 
     if (btn && !oil_or_charging) {
         app_state = APP_AUTO_OFF;
+        set_bulb_on_off(false);
         return ;
     }
 
@@ -346,6 +357,7 @@ static void handle_app_force_on_starter_state()
     }
     if (exchange_was_btn_hold_for_1_sec()) {
         app_state = APP_FORCE_OFF;
+        set_bulb_on_off(false);
         set_led_on();
         next_led_checkpoint = get_timer_value() + INTERVAL_FIFTH_SECOND;
         return ;
@@ -497,16 +509,19 @@ static void execute_led_changes()
 
 #ifndef SIMULATION
 
-// 138 ms
-#define INTERVAL_MORSE_DOT    ((uint8_t)46)
-// 414 ms
-#define INTERVAL_MORSE_DASH   ((uint8_t)(3 * INTERVAL_MORSE_DOT))
-// 2 sek - tu musi być na tyle czasu, żeby zmieścić całą literę plus przerwa
-#define INTERVAL_MORSE_SYM    ((uint16_t)(2000 / 3))
+// 135 ms
+#define INTERVAL_MORSE_DOT    ((uint8_t)45)
+// 180 ms
+#define INTERVAL_MORSE_WAIT   ((uint8_t)60)
+// 450 ms
+#define INTERVAL_MORSE_DASH   ((uint8_t)(150))
+// 2,25 sek - tu musi być na tyle czasu, żeby zmieścić całą literę plus przerwa
+#define INTERVAL_MORSE_SYM    ((uint16_t)(2250 / 3))
 
 #else // !SIMULATION
 
 #define INTERVAL_MORSE_DOT    ((uint8_t)1)
+#define INTERVAL_MORSE_WAIT   ((uint8_t)1)
 #define INTERVAL_MORSE_DASH   ((uint8_t)(3 * INTERVAL_MORSE_DOT))
 #define INTERVAL_MORSE_SYM    ((uint16_t)(20))
 
@@ -572,7 +587,7 @@ static inline void emmit_status_code()
     if (morse_next_flip == timer) {
         if (is_debug_bit_set()) {
             // nowy symbol - stała przerwa
-            morse_next_flip = timer + (uint16_t)INTERVAL_MORSE_DOT;
+            morse_next_flip = timer + (uint16_t)INTERVAL_MORSE_WAIT;
             morse_symbol >>= 2;
             clear_debug_bit();
             return ;
