@@ -432,17 +432,7 @@
       "version": 3
     },
     "net_colors": null,
-    "netclass_assignments": {
-      "/Driver module/INPUT_SW": "USER INPUT",
-      "/Driver module/LED": "USER INPUT",
-      "/Driver module/MISO": "IO",
-      "/Driver module/MOSI": "IO",
-      "/Driver module/SCK": "IO",
-      "/Driver module/{ LED INPUT_SW GND }": "USER INPUT",
-      "/Driver module/{ SCK MISO MOSI ~{RESET} }": "IO",
-      "/Driver module/~{RESET}": "IO",
-      "GND": "USER INPUT"
-    },
+    "netclass_assignments": null,
     "netclass_patterns": []
   },
   "pcbnew": {
@@ -568,7 +558,7 @@
   "sheets": [
     [
       "01e69042-7c7e-48e9-b7c3-459316fd17f1",
-      ""
+      "Root"
     ],
     [
       "e917c9e3-e12b-442a-9fe7-2bad564bae64",

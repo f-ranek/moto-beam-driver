@@ -40,30 +40,39 @@
 #define M_NONE     00
 
 static const uint8_t MORSE_CODES[9] PROGMEM = {
+    // APP_INIT
     // 0 - R   • — •
     MAKE_MORSE (M_DOT, M_DASH, M_DOT),
 
+    // APP_FORCE_OFF
     // 1 - E   •
     MAKE_MORSE (M_DOT, M_NONE, M_NONE),
 
+    // APP_AUTO_BRIGHTENING
     // 2 - A   • —
     MAKE_MORSE (M_DOT, M_DASH, M_NONE),
 
+    // APP_AUTO_ON
     // 3 - M   — —
     MAKE_MORSE (M_DASH, M_DASH, M_NONE),
 
+    // APP_WAITING_FOR_BULB_OFF
     // 4 - N   — •
     MAKE_MORSE (M_DASH, M_DOT, M_NONE),
 
+    // APP_AUTO_OFF
     // 5 - I   • •
     MAKE_MORSE (M_DOT, M_DOT, M_NONE),
 
+    // APP_FORCE_BRIGHTENING
     // 6 - U   • • —
     MAKE_MORSE (M_DOT, M_DOT, M_DASH),
 
+    // APP_FORCE_ON
     // 7 - O   — — —
     MAKE_MORSE (M_DASH, M_DASH, M_DASH),
 
+    // APP_FORCE_ON_STARTER
     // 8 - S   • • •
     MAKE_MORSE (M_DOT, M_DOT, M_DOT),
 };

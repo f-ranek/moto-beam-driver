@@ -1,105 +1,207 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 01e69042-7c7e-48e9-b7c3-459316fd17f1)
-
-  (paper "A4")
-
-  (title_block
-    (title "Bulb drive")
-    (date "2023-04-19")
-  )
-
-  (lib_symbols
-  )
-
-
-
-  (sheet (at 27.94 81.28) (size 43.18 29.21) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 0c65a6ac-9b7c-43de-8f27-03fd79afa39a)
-    (property "Sheetname" "Power module wiring" (at 27.94 80.5684 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "power_module_wiring.kicad_sch" (at 27.94 111.0746 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "6"))
-      )
-    )
-  )
-
-  (sheet (at 80.01 35.56) (size 45.72 31.75) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 111fb05e-7613-4dff-b0ef-7b688bb51755)
-    (property "Sheetname" "Driver module" (at 80.01 34.8484 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "uc_module.kicad_sch" (at 80.01 67.8946 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "3"))
-      )
-    )
-  )
-
-  (sheet (at 27.94 35.56) (size 45.72 31.75) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 5b3d980a-93eb-45cc-b873-850f2d2e8df8)
-    (property "Sheetname" "Power delivery module" (at 27.94 34.8484 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "power_delivery_module.kicad_sch" (at 27.94 67.8946 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "5"))
-      )
-    )
-  )
-
-  (sheet (at 144.78 39.37) (size 36.83 29.21) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 8dbccfbf-0961-4856-9879-280cfe95837a)
-    (property "Sheetname" "Power module N" (at 144.78 38.6584 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "power_module_n.kicad_sch" (at 144.78 69.1646 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "4"))
-      )
-    )
-  )
-
-  (sheet (at 81.28 80.01) (size 45.72 31.75) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid e917c9e3-e12b-442a-9fe7-2bad564bae64)
-    (property "Sheetname" "Interface module" (at 81.28 79.2984 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "interface_module.kicad_sch" (at 81.28 112.3446 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "led_drive"
-        (path "/01e69042-7c7e-48e9-b7c3-459316fd17f1" (page "2"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "1"))
-  )
+(kicad_sch
+	(version 20231120)
+	(generator "eeschema")
+	(generator_version "8.0")
+	(uuid "01e69042-7c7e-48e9-b7c3-459316fd17f1")
+	(paper "A4")
+	(title_block
+		(title "Bulb drive")
+		(date "2023-04-19")
+	)
+	(lib_symbols)
+	(sheet
+		(at 27.94 81.28)
+		(size 43.18 29.21)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "0c65a6ac-9b7c-43de-8f27-03fd79afa39a")
+		(property "Sheetname" "Power module wiring"
+			(at 27.94 80.5684 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power_module_wiring.kicad_sch"
+			(at 27.94 111.0746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "led_drive"
+				(path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 80.01 35.56)
+		(size 45.72 31.75)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "111fb05e-7613-4dff-b0ef-7b688bb51755")
+		(property "Sheetname" "Driver module"
+			(at 80.01 34.8484 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "uc_module.kicad_sch"
+			(at 80.01 67.8946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "led_drive"
+				(path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 27.94 35.56)
+		(size 45.72 31.75)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "5b3d980a-93eb-45cc-b873-850f2d2e8df8")
+		(property "Sheetname" "Power delivery module"
+			(at 27.94 34.8484 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power_delivery_module.kicad_sch"
+			(at 27.94 67.8946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "led_drive"
+				(path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 144.78 39.37)
+		(size 36.83 29.21)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "8dbccfbf-0961-4856-9879-280cfe95837a")
+		(property "Sheetname" "Power module N"
+			(at 144.78 38.6584 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power_module_n.kicad_sch"
+			(at 144.78 69.1646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "led_drive"
+				(path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 81.28 80.01)
+		(size 45.72 31.75)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "e917c9e3-e12b-442a-9fe7-2bad564bae64")
+		(property "Sheetname" "Interface module"
+			(at 81.28 79.2984 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "interface_module.kicad_sch"
+			(at 81.28 112.3446 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "led_drive"
+				(path "/01e69042-7c7e-48e9-b7c3-459316fd17f1"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
 )
