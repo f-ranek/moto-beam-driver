@@ -242,6 +242,12 @@ $(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)
     <Compile Include="main.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="morse.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="morse.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="pin_io.c">
       <SubType>compile</SubType>
     </Compile>

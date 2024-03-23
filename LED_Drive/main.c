@@ -67,8 +67,8 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
     // 4 - SCK
     // 5 - DO - data out
 
-    // 6 - morse debug bit
-    // 7 - LED
+    // 6 - morse debug bit, 1 - off, 0 - on
+    // 7 - LED, 0 - off, 1 - on
 
     // bit 1 to mark as output
     DDRA = _BV(4) | _BV(5) | _BV(6) | _BV(7);
@@ -83,7 +83,7 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
 
     // 0 - WE olej
     // 1 - WE luz
-    // 2 - WY światła
+    // 2 - WY światła, 1 - off, 0 - on
     // 3 - WE reset
 
     // enable pull-up for bits 0 and 1
