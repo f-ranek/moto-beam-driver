@@ -125,6 +125,9 @@
         </avrgcc.assembler.general.IncludePaths>
       </AvrGcc>
     </ToolchainSettings>
+    <OutputFileName>led_drive</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <PostBuildEvent>$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -166,6 +169,9 @@
         <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
       </AvrGcc>
     </ToolchainSettings>
+    <OutputFileName>led_drive</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <PostBuildEvent>$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Simulation' ">
     <ToolchainSettings>
