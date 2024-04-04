@@ -46,17 +46,21 @@ static inline void adjust_target_pwm_value_2(
 }
 
 typedef enum __accu_status {
+    UNKNOWN,
+    // rozrusznik
+    STARTER_RUNNING,
     // brak ładowania
     NORMAL,
     // ładowanie
     CHARGING,
-    // rozrusznik
-    STARTER_RUNNING,
-
-    UNKNOWN,
 } accu_status_e;
 
-extern accu_status_e get_accu_status();
+extern accu_status_e __accu_status_value;
+
+static inline accu_status_e get_accu_status()
+{
+    return __accu_status_value;
+}
 
 typedef enum __bulb_actual_status {
     // do 3V, normalna praca

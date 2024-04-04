@@ -50,6 +50,6 @@ void start_pwm()
     DDRB |= _BV(2);
 
     // default LED duty cycle - 5%
-    OCR0B = 128; // 12;
+    OCR0B = 12; // --> 8?
 }
 

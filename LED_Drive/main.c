@@ -19,7 +19,10 @@
 FUSES =
 {
     // SUT = 00 - startup time = 6 CK
-    .low = (FUSE_CKDIV8 & FUSE_SUT1 & FUSE_SUT0 & FUSE_CKSEL3 & FUSE_CKSEL2 & FUSE_CKSEL0),
+    // CKSEL = 0010 - internal RC oscillator at 8 MHz
+    .low = (FUSE_SUT1 & FUSE_SUT0 & FUSE_CKSEL3 & FUSE_CKSEL2 & FUSE_CKSEL0),
+    // SPIEN - enable SPI programming
+    // WDTON - watchdog always on
     // BODLEVEL = 100 - ~4.3V
     .high = (FUSE_SPIEN & FUSE_WDTON & FUSE_BODLEVEL1 & FUSE_BODLEVEL0),
     .extended = EFUSE_DEFAULT,
@@ -64,8 +67,10 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
     // 0 - WE przycisk
 
     // SPI interface
-    // 4 - SCK
-    // 5 - DO - data out
+    //      8 bits from LSB to MSB
+    //      latch DATA on rising edge of CLK
+    // 4 - DATA
+    // 5 - CLK
 
     // 6 - morse debug bit, 1 - off, 0 - on
     // 7 - LED, 0 - off, 1 - on
@@ -77,8 +82,8 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
 
     // Digital Input Disable Register 0
     // 1 - WE czujnik zmierzchu
-    // 2 - WE aku
-    // 3 - WE sensor świateł
+    // 2 - WE sensor świateł
+    // 3 - WE aku
     DIDR0 = _BV(1) | _BV(2) | _BV(3);
 
     // 0 - WE olej
@@ -99,17 +104,6 @@ void initial_setup()
     // read reset cause
     MCUSR_initial_copy = MCUSR;
     MCUSR = 0;
-
-    // setup clock prescaler
-    // Table 6-11. Clock Prescaler Select
-    // 0000 - no prescaler - 8 MHz
-    // 0001 - /2           - 4 MHz
-    // 0010 - /4           - 2 MHz
-    // 0011 - /8           - 1 MHz
-    // enable change possibility
-    CLKPR = _BV(CLKPCE);
-    // write actual value - 4MHz
-    CLKPR = _BV(CLKPS0);
 
     setup_initial_port_status();
 

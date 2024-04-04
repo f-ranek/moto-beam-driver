@@ -512,6 +512,25 @@ static inline void emmit_debug_data()
     app_debug_status.bulb_pwm = get_bulb_power();
     app_debug_status.app_status = app_state;
 
+    uint8_t input_state = 0;
+
+    input_state |= is_button_pressed() ? 1 : 0;
+    input_state <<= 1;
+    input_state |= is_oli_pressure() ? 1 : 0;
+    input_state <<= 1;
+    input_state |= is_gear_engaged() ? 1 : 0;
+    input_state <<= 1;
+
+    input_state <<= 1;
+    input_state <<= 1;
+    input_state |= is_oil_or_charging() ? 1 : 0;
+
+    input_state <<= 1;
+    input_state <<= 1;
+    input_state |= get_accu_status() & 0x03;
+
+    app_debug_status.input_state = input_state;
+
     emmit_spi_data(&app_debug_status, sizeof(app_debug_status));
 }
 

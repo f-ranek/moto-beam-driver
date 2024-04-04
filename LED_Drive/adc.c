@@ -12,8 +12,8 @@
 
 #include "adc.h"
 
-// PA2 - napięcie AKU
-// PA3 - światła
+// PA2 - światła
+// PA3 - napięcie AKU
 
 uint16_t __accu_adc_sum;
 uint8_t __accu_adc_count;
@@ -70,12 +70,13 @@ static inline void start_adc()
     // 111 - /128
     // target frequency should be in range 50 - 200 kHz
     // so for 4MHz clock, we need to /32 to get 125 kHz
-    ADCSRA = _BV(ADEN) | _BV(ADIE)  | _BV(ADIF) | _BV(ADSC) | _BV(ADATE) | _BV(ADPS2) | _BV(ADPS0);
+    // so for 8MHz clock, we need to /64 to get 125 kHz
+    ADCSRA = _BV(ADEN) | _BV(ADIE)  | _BV(ADIF) | _BV(ADSC) | _BV(ADATE) | _BV(ADPS2) | _BV(ADPS1);
 }
 
 static inline void stop_adc()
 {
-    ADCSRA = _BV(ADEN) | _BV(ADIF) | _BV(ADPS2) | _BV(ADPS0);
+    ADCSRA = _BV(ADEN) | _BV(ADIF) | _BV(ADPS2) | _BV(ADPS1);
     __adc_source = ADC_SOURCE_NONE;
 }
 
@@ -83,14 +84,14 @@ inline void launch_bulb_adc()
 {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
-        __adc_source = 0x20 | ADC_SOURCE_BULB;
+        __adc_source = 0x30 | ADC_SOURCE_BULB;
         // reset, aby zachować ciągłość pomiaru
         __bulb_adc_sum = 0;
         __bulb_adc_count = 0;
     }
-    // start ADC - światła, PA3
-    // PA3 - MUX1, MUX0
-    ADMUX = _BV(MUX1) | _BV(MUX0);
+    // start ADC - światła
+    // PA2 - MUX1
+    ADMUX = _BV(MUX1);
     start_adc();
 }
 
@@ -98,13 +99,13 @@ inline void launch_accu_adc()
 {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
-        __adc_source = 0x20 | ADC_SOURCE_ACCU;
+        __adc_source = 0x30 | ADC_SOURCE_ACCU;
         // reset, aby zachować ciągłość pomiaru
         __accu_adc_sum = 0;
         __accu_adc_count = 0;
     }
-    // PA2 - MUX1
-    ADMUX = _BV(MUX1);
+    // PA3 - MUX1, MUX0
+    ADMUX = _BV(MUX1) | _BV(MUX0);
     start_adc();
 }
 
@@ -118,6 +119,7 @@ static inline void process_bulb_adc_result(uint16_t data_item) {
     if (++__bulb_adc_count == __bulb_adc_target) {
         stop_adc();
         __bulb_adc_count = 0xFF;
+        __adc_source = 0;
         INCREMENT_IF_DEBUG(__dbg_bulb_adc_count);
     }
 }
@@ -138,6 +140,7 @@ static inline void process_accu_adc_result(uint16_t data_item) {
     if (++__accu_adc_count == _BV(__accu_adc_bits)) {
         stop_adc();
         __accu_adc_count = 0xFF;
+        __adc_source = 0;
         INCREMENT_IF_DEBUG(__dbg_accu_adc_count);
     }
 }
@@ -169,6 +172,4 @@ ISR (ADC_vect, ISR_BLOCK)
     } else  {
         __adc_source -= 0x10;
     }
-
-    // wdt_reset(); // TEMP
 }

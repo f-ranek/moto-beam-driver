@@ -7,34 +7,32 @@
 #include <avr/io.h>
 #include "spi.h"
 
-static inline void emmit_spi_byte(uint8_t byte) {
-    USIDR = byte;
-    const uint8_t low  = _BV(USIWM0)|_BV(USITC);
-    const uint8_t high = _BV(USIWM0)|_BV(USITC)|_BV(USICLK);
-    // 8 times
+static inline uint8_t swap_nibbles(uint8_t byte) {
+    return (byte >> 4) | (byte << 4);
+}
+
+__attribute__((noinline)) static void emmit_spi_byte(uint8_t byte) {
+
+    // DATA - PA4 - LSB to MSB
+    // CLK  - PA5
+
+    const uint8_t port_template = swap_nibbles(PORTA & ~(_BV(5) | _BV(4)));
+    for (uint8_t i=0; i<8; i++){
+        uint8_t port = (byte & 0x01) | port_template;
+        // clear CLK and store DATA
+        PORTA = swap_nibbles(port);
+        // set CLK
+        PORTA |= _BV(5);
+        byte >>= 1;
+    }
     __asm__ __volatile__ (
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    "out %[USICR_], %[low_]"            "\n"
-    "out %[USICR_], %[high_]"           "\n"
-    :
-    : [low_]              "r" (low),
-    [high_]               "r" (high),
-    [USICR_]              "I" (_SFR_IO_ADDR(USICR))
+        "nop" "\n"
+        "nop" "\n"
+        "nop" "\n"
+        "nop" "\n"
+        "nop" "\n"
     );
-    USICR = 0;
+    PORTA = swap_nibbles(port_template);
 }
 
 void emmit_spi_data(void* data, uint8_t size) {

@@ -19,11 +19,10 @@ void setup_timer_3ms()
     // count to 374 - magic value calculated from 1MHz timer and /8 prescaler
     // count to 1499 - magic value calculated from 4MHz timer and /8 prescaler
     // count to 374 - magic value calculated from 8MHz timer and /64 prescaler
+    // count to 2999 - magic value calculated from 8MHz timer and /8 prescaler
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
 
-    // 1540 is calibrated value
-    // TODO: read from EEPROM ;)
-    OCR1A = 1540;
+    OCR1A = 2999;
 
     // start counter
 

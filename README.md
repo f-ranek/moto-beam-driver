@@ -143,7 +143,7 @@ Ja korzystam po taniości z płytki Arduino połączonej z mikrokontrolerem, ora
 Programowanie mikrokontrolera odbywa się przez `avrdude`, i np. żeby wejść w tryb interaktywny, należy wydać polecenie: `avrdude -v -p attiny84 -c arduino -P COM6 -b 19200 -t`, gdzie `COM6` oznacza nr portu, pod którym zarejestrowała się płytka Arduino podpięta do komputera.
 
 Programowanie _fuse bit_ można wykonać wydając polecenie (w trybie interaktywnym `avrdude`):  
-`write lfuse 0 0x42`  
+`write lfuse 0 0xC2`  
 `write hfuse 0 0xCC`  
 
 

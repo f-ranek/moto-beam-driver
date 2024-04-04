@@ -11,9 +11,10 @@
 #include "timer.h"
 
 uint16_t accu_adc_result;
+accu_status_e __accu_status_value;
 uint16_t bulb_adc_result;
 
-accu_status_e get_accu_status()
+static inline accu_status_e calc_accu_status(uint16_t accu_adc_result)
 {
     if (accu_adc_result < VOLTAGE_6_V) {
         return UNKNOWN;
@@ -78,6 +79,7 @@ void read_adc_results()
     }
     if (is_accu_adc_result_ready()) {
         accu_adc_result = smooth_value(accu_adc_result, get_accu_adc_result());
+        __accu_status_value = calc_accu_status(accu_adc_result);
         app_debug_status.accu_voltage_lo = accu_adc_result;
         app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
     }
@@ -155,10 +157,10 @@ void launch_adc()
     // odpalamy co 6 ms
     switch (get_timer_value() & 3) {
         case 0:
-        launch_bulb_adc();
-        break;
+            launch_bulb_adc();
+            break;
         case 2:
-        launch_accu_adc();
-        break;
+            launch_accu_adc();
+            break;
     }
 }
