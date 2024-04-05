@@ -7,32 +7,55 @@
 #include <avr/io.h>
 #include "spi.h"
 
-static inline uint8_t swap_nibbles(uint8_t byte) {
-    return (byte >> 4) | (byte << 4);
-}
-
 __attribute__((noinline)) static void emmit_spi_byte(uint8_t byte) {
 
-    // DATA - PA4 - LSB to MSB
+    // DATA - PA4 - MSB to LSB
     // CLK  - PA5
+    uint8_t tmp;
 
-    const uint8_t port_template = swap_nibbles(PORTA & ~(_BV(5) | _BV(4)));
-    for (uint8_t i=0; i<8; i++){
-        uint8_t port = (byte & 0x01) | port_template;
-        // clear CLK and store DATA
-        PORTA = swap_nibbles(port);
-        // set CLK
-        PORTA |= _BV(5);
-        byte >>= 1;
-    }
     __asm__ __volatile__ (
-        "nop" "\n"
-        "nop" "\n"
-        "nop" "\n"
-        "nop" "\n"
-        "nop" "\n"
+       // load PORTA to temp storage
+       "in %[tmp_], %[PORTA_]"  "\n"
+       // clean bits 4 (DATA) and 5 (CLK)
+       "andi %[tmp_], 0xCF"     "\n"
+       : [tmp_]                "=d" (tmp)
+       : [PORTA_]              "I" (_SFR_IO_ADDR(PORTA))
     );
-    PORTA = swap_nibbles(port_template);
+
+#define EMMIT_BIT(BIT_NO)                       \
+    __asm__ __volatile__ (                      \
+        /* copy BIT# from data to T reg */      \
+        "bst %[byte_], " #BIT_NO "\n"           \
+        /* copy T to tmp_ at pos 4 (DATA) */    \
+        "bld %[tmp_], 4"         "\n"           \
+        /* emmit DATA and CLK = 0 */            \
+        "out %[PORTA_], %[tmp_]" "\n"           \
+        /* emmit CLK = 1 */                     \
+        "sbi %[PORTA_], 5"           "\n"       \
+        : [tmp_]              "+d" (tmp)                    \
+        : [byte_]             "r" (byte),                   \
+          [PORTA_]            "I" (_SFR_IO_ADDR(PORTA))     \
+    )
+
+    EMMIT_BIT(7);
+    EMMIT_BIT(6);
+    EMMIT_BIT(5);
+    EMMIT_BIT(4);
+    EMMIT_BIT(3);
+    EMMIT_BIT(2);
+    EMMIT_BIT(1);
+    EMMIT_BIT(0);
+
+    __asm__ __volatile__ (
+        // clean bits 4 (DATA) and 5 (CLK)
+        "andi %[tmp_], 0xCF"        "\n"
+        // wait to make smooth timing
+        "nop"                       "\n"
+        // emmit PORTA with both DATA and CLK reset
+        "out %[PORTA_], %[tmp_]"    "\n"
+        : [tmp_]                "+d" (tmp)
+        : [PORTA_]              "I" (_SFR_IO_ADDR(PORTA))
+    );
 }
 
 void emmit_spi_data(void* data, uint8_t size) {
