@@ -18,15 +18,17 @@
 
 FUSES =
 {
-    // SUT = 00 - startup time = 6 CK
+    // SUT = 10 - slowly rising power - 14CK + 64 ms
     // CKSEL = 0010 - internal RC oscillator at 8 MHz
-    .low = (FUSE_SUT1 & FUSE_SUT0 & FUSE_CKSEL3 & FUSE_CKSEL2 & FUSE_CKSEL0),
+    .low = (FUSE_SUT0 & FUSE_CKSEL3 & FUSE_CKSEL2 & FUSE_CKSEL0),
     // SPIEN - enable SPI programming
     // WDTON - watchdog always on
     // BODLEVEL = 100 - ~4.3V
     .high = (FUSE_SPIEN & FUSE_WDTON & FUSE_BODLEVEL1 & FUSE_BODLEVEL0),
     .extended = EFUSE_DEFAULT,
 };
+
+uint8_t restart_count __attribute__ ((section (".noinit")));;
 
 #ifdef SIMULATION
 
@@ -67,7 +69,7 @@ static inline __attribute__ ((always_inline)) void setup_initial_port_status() {
     // 0 - WE przycisk
 
     // SPI interface
-    //      8 bits from LSB to MSB
+    //      8 bits from MSB to LSB
     //      latch DATA on rising edge of CLK
     // 4 - DATA
     // 5 - CLK
@@ -103,7 +105,10 @@ void initial_setup()
 {
     // read reset cause
     MCUSR_initial_copy = MCUSR;
-    MCUSR = 0;
+    if ((MCUSR & _BV(PORF)) != 0 && (restart_count & 0xF0) != 0) {
+        restart_count = 0;
+    }
+    restart_count++;
 
     setup_initial_port_status();
 

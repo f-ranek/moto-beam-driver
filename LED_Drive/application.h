@@ -28,20 +28,27 @@ typedef struct __app_debug_status {
 
     uint8_t input_state;        // 5
                                 //   hi:
-                                //      (3)   - btn - 1 - pressed
-                                //      (2)   - oil - 1 - pressure
-                                //      (1)   - gear enaged
-                                //      (0)
+                                //      (8)   - btn - 1 - pressed
+                                //      (4)   - oil - 1 - pressure
+                                //      (2)   - gear enaged
+                                //      (1)
                                 //   lo:
-                                //      (3)
-                                //      (2)   - oil or charging
-                                //      (1,0) - accu state
+                                //      (8)
+                                //      (4)   - oil or charging
+                                //      (3-0) - accu state
                                 //              11 - charging
                                 //              10 - normal
                                 //              01 - starter running
                                 //              00 - unknown
     uint8_t bulb_pwm;           // 6
-    uint16_t adc_count;         // 7,8  - 6314 (18AA) - 6322 (18B2) - 6336 (18C0)
+    uint8_t reset_flags;        // 7
+                                //   hi: reset count (starting from 1)
+                                //   lo:
+                                //      (8) - watchdog reset
+                                //      (4) - brown-out detector reset
+                                //      (2) - external (PIN) reset
+                                //      (1) - power on reset
+    uint16_t adc_count;         // 8,9  - 6482 (1952) - 6490 (195A) - 6501 (1965)
 } app_debug_status_t;
 
 extern app_debug_status_t app_debug_status;

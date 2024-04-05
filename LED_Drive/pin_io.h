@@ -28,7 +28,7 @@ extern __pin_status __motorcycle_status;
 // bit 1 - czy następne przerwanie należy zignorować
 // bit 2 - czy jest wciśnięty od 1 sek?
 // bit 3 - flaga oczkiwania na interwał 1 sek
-#define __button_interrupt_pending GPIOR0
+extern uint8_t __button_interrupt_pending;
 
 // zwraca bit opisujący stan ciśnienia oleju
 // 0 -> brak ciśnienia

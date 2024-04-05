@@ -9,6 +9,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define MCUSR_initial_copy GPIOR1
+#include <avr/io.h>
+
+extern uint8_t restart_count;
+#define MCUSR_initial_copy GPIOR0
 
 #endif /* MAIN_H_ */

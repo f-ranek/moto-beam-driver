@@ -556,5 +556,5 @@ void loop_application_logic()
 
 void init_application() {
     next_led_checkpoint = INTERVAL_FIFTH_SECOND;
-    // app_state = APP_INIT;
+    app_debug_status.reset_flags = (restart_count << 4) | (MCUSR_initial_copy & 0x0F);
 }

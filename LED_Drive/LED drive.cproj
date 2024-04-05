@@ -128,7 +128,8 @@
     <OutputFileName>led_drive</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <PostBuildEvent>$(ToolchainDir)\avr-size "$(OutputFileName)$(OutputFileExtension)"
-$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
+$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"
+$(ToolchainDir)\avr-objdump -S --no-addresses -j .fuse "$(OutputFileName)$(OutputFileExtension)" | grep -A 1 -i fuse</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -173,7 +174,8 @@ $(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)
     <OutputFileName>led_drive</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <PostBuildEvent>$(ToolchainDir)\avr-size "$(OutputFileName)$(OutputFileExtension)"
-$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"</PostBuildEvent>
+$(ToolchainDir)\avr-objdump -Pmem-usage "$(OutputFileName)$(OutputFileExtension)"
+$(ToolchainDir)\avr-objdump -S --no-addresses -j .fuse "$(OutputFileName)$(OutputFileExtension)"  | grep -A 1 -i fuse</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Simulation' ">
     <ToolchainSettings>

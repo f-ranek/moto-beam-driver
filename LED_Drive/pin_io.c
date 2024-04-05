@@ -16,7 +16,8 @@
 
 __pin_status __button_status;
 __pin_status __motorcycle_status;
-uint16_t next_btn_hold_checkpoint;
+uint8_t __button_interrupt_pending;
+static uint16_t next_btn_hold_checkpoint;
 
 static inline void update_pin_status(__pin_status* status, uint8_t current_reading, uint8_t cycles);
 static inline void read_button_value();
