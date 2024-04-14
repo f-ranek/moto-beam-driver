@@ -1778,7 +1778,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(uuid "cfae415f-7609-47d9-9587-c41f5fc9f94d")
 		(property "Reference" "J14"
@@ -1849,7 +1849,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board yes)
+		(on_board no)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f44c2adc-d2bb-453f-b6df-c998c84f0b23")

@@ -19,7 +19,7 @@ static inline accu_status_e calc_accu_status(uint16_t accu_adc_result)
     if (accu_adc_result < VOLTAGE_6_V) {
         return UNKNOWN;
     }
-    if (accu_adc_result < VOLTAGE_10_V) {
+    if (accu_adc_result < VOLTAGE_10_5_V) {
         return STARTER_RUNNING;
     }
     if (accu_adc_result < VOLTAGE_13_V) {
@@ -30,7 +30,7 @@ static inline accu_status_e calc_accu_status(uint16_t accu_adc_result)
 
 bulb_actual_status_e get_bulb_actual_status()
 {
-    if (bulb_adc_result < VOLTAGE_0_05_V) {
+    if (bulb_adc_result <= VOLTAGE_0_03_V) {
         // teoretycznie, przy IFRZ44N
         // oporność w stanie przewodzenia 17 mOhm
         // przy żarówce 55 W pobierającej 4 A

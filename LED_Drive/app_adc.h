@@ -17,6 +17,7 @@ extern uint16_t bulb_adc_result;
 #define VOLTAGE_3_V    (0xCF)
 #define VOLTAGE_6_V    (0x19D)
 #define VOLTAGE_10_V   (0x2B0)
+#define VOLTAGE_10_5_V (0x2D3)
 #define VOLTAGE_11_5_V (0x318)
 #define VOLTAGE_12_5_V (0x35C)
 #define VOLTAGE_13_V   (0x37F)
@@ -24,8 +25,9 @@ extern uint16_t bulb_adc_result;
 #define VOLTAGE_13_2_V (0x38D)
 #define VOLTAGE_13_5_V (0x3A1)
 
-#define VOLTAGE_0_1_V  (0x7)
+#define VOLTAGE_0_03_V (0x2)
 #define VOLTAGE_0_05_V (0x3)
+#define VOLTAGE_0_1_V  (0x7)
 #define VOLTAGE_0_5_V  (0x23)
 
 extern void launch_adc();

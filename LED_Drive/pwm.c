@@ -32,10 +32,10 @@ void start_pwm()
     // fOCnxPWM = fclk_I/O / (N * 256), where N = prescaler factor of 1, 8, 64, 256, 1024
 
     // from 4 MHz and 256 prescaler, we get ~61 Hz
-    // TCCR0B = _BV(CS02);
-
     // from 4 MHz and 64 prescaler, we get ~244 Hz
-    TCCR0B = _BV(CS01) | _BV(CS00);
+    // from 8 MHz and 64 prescaler, we get ~488 Hz
+    // from 8 MHz and 256 prescaler, we get ~122 Hz
+    TCCR0B = _BV(CS02);
 
     // fig 11-6 pg 76
     //COM0x1:0 = 2 - non inverted pwm
@@ -50,6 +50,6 @@ void start_pwm()
     DDRB |= _BV(2);
 
     // default LED duty cycle - 5%
-    OCR0B = 12; // --> 8?
+    OCR0B = 8;
 }
 

@@ -78,6 +78,9 @@ static inline bool exchange_button_pressed() {
 static inline bool exchange_was_btn_hold_for_1_sec() {
     bool result = is_button_pressed() && (__button_interrupt_pending & _BV(2));
     __button_interrupt_pending &= ~_BV(2);
+    if (result) {
+        ignore_next_button_release();
+    }
     return result;
 }
 

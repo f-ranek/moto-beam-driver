@@ -90,8 +90,8 @@ inline void launch_bulb_adc()
         __bulb_adc_count = 0;
     }
     // start ADC - światła
-    // PA2 - MUX1
-    ADMUX = _BV(MUX1);
+    // PA3 - MUX1, MUX0
+    ADMUX = _BV(MUX1) | _BV(MUX0);
     start_adc();
 }
 
@@ -104,8 +104,8 @@ inline void launch_accu_adc()
         __accu_adc_sum = 0;
         __accu_adc_count = 0;
     }
-    // PA3 - MUX1, MUX0
-    ADMUX = _BV(MUX1) | _BV(MUX0);
+    // PA2 - MUX1
+    ADMUX = _BV(MUX1);
     start_adc();
 }
 

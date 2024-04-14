@@ -26,6 +26,10 @@ static inline uint16_t get_timer_value() {
 
 // 1 second in 3ms ticks
 #define INTERVAL_ONE_SECOND ((uint16_t)(1000 / 3))
+// 2 seconds in 3ms ticks
+#define INTERVAL_TWO_SECONDS ((uint16_t)(2000 / 3))
+// 3 seconds in 3ms ticks
+#define INTERVAL_THREE_SECONDS ((uint16_t)(3000 / 3))
 // 5 seconds in 3ms ticks
 #define INTERVAL_FIVE_SECONDS ((uint16_t)(5000 / 3))
 

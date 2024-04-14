@@ -22,7 +22,7 @@ void setup_timer_3ms()
     // count to 2999 - magic value calculated from 8MHz timer and /8 prescaler
     // f = f_CLK / (2 * N * (OCR1A+1)), where N = prescaler value
 
-    OCR1A = 2999;
+    OCR1A = 2999 + 71;
 
     // start counter
 
