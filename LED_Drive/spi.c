@@ -5,6 +5,7 @@
  *  Author: Bogusław
  */
 #include <avr/io.h>
+#include <util/atomic.h>
 #include "spi.h"
 
 __attribute__((noinline)) static void emmit_spi_byte(uint8_t byte) {
@@ -59,10 +60,13 @@ __attribute__((noinline)) static void emmit_spi_byte(uint8_t byte) {
 }
 
 void emmit_spi_data(void* data, uint8_t size) {
-    uint8_t* data2 = (uint8_t*)data;
-    while(size != 0) {
-        emmit_spi_byte(*data2);
-        data2++;
-        size--;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    {
+        uint8_t* data2 = (uint8_t*)data;
+        while(size != 0) {
+            emmit_spi_byte(*data2);
+            data2++;
+            size--;
+        }
     }
 }

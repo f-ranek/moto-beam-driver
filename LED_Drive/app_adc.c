@@ -10,9 +10,11 @@
 #include "application.h"
 #include "timer.h"
 
-uint16_t accu_adc_result;
+static uint16_t accu_adc_result;
 accu_status_e __accu_status_value;
-uint16_t bulb_adc_result;
+
+static uint16_t bulb_adc_result;
+static uint8_t twilight_adc_result;
 
 static inline accu_status_e calc_accu_status(uint16_t accu_adc_result)
 {
@@ -84,6 +86,11 @@ void read_adc_results()
         app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
     }
 
+    if (is_twilight_adc_result_ready()) {
+        twilight_adc_result = get_twilight_adc_result();
+        app_debug_status.twilight_voltage = twilight_adc_result;
+    }
+
     const uint16_t timer = get_timer_value();
     if (timer == next_adc_counter_read_timeline) {
         next_adc_counter_read_timeline = timer + INTERVAL_ONE_SECOND;
@@ -105,7 +112,7 @@ static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
 }
 */
 
-void adjust_target_pwm_value(uint8_t current,
+void adjust_target_pwm_value_impl(uint8_t current,
     uint16_t accu_adc_result, uint16_t bulb_adc_result,
     pwm_consumer_t pm_consumer)
 {
@@ -152,15 +159,27 @@ void adjust_target_pwm_value(uint8_t current,
     // nic nie trzeba robić
 }
 
+void adjust_target_pwm_value(
+    uint8_t current,
+    pwm_consumer_t pm_consumer)
+{
+    adjust_target_pwm_value_impl(current, accu_adc_result, bulb_adc_result, pm_consumer);
+}
+
 void launch_adc()
 {
-    // odpalamy co 6 ms
-    switch (get_timer_value() & 3) {
+    const uint8_t timer = get_timer8_value();
+    // odpalamy co 12 ms
+    // 0 1 2 3 4 5 6
+    switch (timer & 7) {
         case 0:
             launch_bulb_adc();
             break;
-        case 2:
+        case 3:
             launch_accu_adc();
+            break;
+        case 6:
+            launch_twilight_adc();
             break;
     }
 }

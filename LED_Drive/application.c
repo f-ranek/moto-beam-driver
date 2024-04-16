@@ -56,7 +56,7 @@ static inline bool is_oil_or_charging()
     return is_oli_pressure() || ((accu_status = get_accu_status()) == CHARGING) || (accu_status == UNKNOWN);
 }
 
-#define BULB_BRIGHTENING_DELAY ((4000)/(3)/(225-2))
+#define BULB_BRIGHTENING_DELAY ((5000)/(3)/(225-2))
 
 static uint16_t next_bulb_checkpoint;
 static uint16_t next_led_checkpoint;
@@ -79,7 +79,7 @@ static bool init_first_pass_done;
 static void handle_app_init_state()
 {
     const bool init_first_pass = !init_first_pass_done;
-    init_first_pass_done = true;
+    init_first_pass_done = init_first_pass_done || (get_timer_value() == 16);
     // prawdopodobnie coś jebło, a jedziemy - od razu 100%
     if (init_first_pass && is_gear_engaged() && is_oil_or_charging()) {
         app_state = APP_AUTO_ON;
@@ -202,7 +202,7 @@ static void handle_app_auto_on_state()
 
     // co 48 ms
     if ((timer & 0xF) == 0xF) {
-        adjust_target_pwm_value_2(
+        adjust_target_pwm_value(
             get_bulb_power(),
             &set_bulb_power);
     }
@@ -338,10 +338,10 @@ static void handle_app_force_on_state()
     }
 
     // co 48 ms
-    if ((timer & 0xF) == 0xF) {
-        adjust_target_pwm_value_2(
-        get_bulb_power(),
-        &set_bulb_power);
+    if ((((uint8_t)timer) & 0xF) == 0xF) {
+        adjust_target_pwm_value(
+            get_bulb_power(),
+            &set_bulb_power);
     }
 }
 

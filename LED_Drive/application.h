@@ -48,7 +48,8 @@ typedef struct __app_debug_status {
                                 //      (4) - brown-out detector reset
                                 //      (2) - external (PIN) reset
                                 //      (1) - power on reset
-    uint16_t adc_count;         // 8,9  - 6482 (1952) - 6490 (195A) - 6501 (1965)
+    uint8_t twilight_voltage;   // 8
+    uint16_t adc_count;         // 9,10  - 6482 (1952) - 6490 (195A) - 6501 (1965)
 } app_debug_status_t;
 
 extern app_debug_status_t app_debug_status;

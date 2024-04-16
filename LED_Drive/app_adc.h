@@ -11,9 +11,6 @@
 
 #include <stdint.h>
 
-extern uint16_t accu_adc_result;
-extern uint16_t bulb_adc_result;
-
 #define VOLTAGE_3_V    (0xCF)
 #define VOLTAGE_6_V    (0x19D)
 #define VOLTAGE_10_V   (0x2B0)
@@ -37,15 +34,7 @@ typedef void (*pwm_consumer_t)(uint8_t);
 
 extern void adjust_target_pwm_value(
     uint8_t current,
-    uint16_t accu_adc_result, uint16_t bulb_adc_result,
     pwm_consumer_t pm_consumer);
-
-static inline void adjust_target_pwm_value_2(
-    uint8_t current,
-    pwm_consumer_t pm_consumer)
-{
-    adjust_target_pwm_value(current, accu_adc_result, bulb_adc_result, pm_consumer);
-}
 
 typedef enum __accu_status {
     UNKNOWN,

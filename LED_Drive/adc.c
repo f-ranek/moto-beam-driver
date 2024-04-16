@@ -17,43 +17,27 @@
 
 uint16_t __accu_adc_sum;
 uint8_t __accu_adc_count;
-const uint8_t __accu_adc_bits = 5;
+const uint8_t __accu_adc_target = 32;
 
 uint16_t __bulb_adc_sum;
 uint8_t __bulb_adc_count;
 const uint8_t __bulb_adc_target = 40;
 
+uint16_t __twilight_adc_sum;
+uint8_t __twilight_adc_count;
+const uint8_t __twilight_adc_target = 8;
+
 uint8_t __adc_source;
 #define ADC_SOURCE_NONE 0
 #define ADC_SOURCE_ACCU 1
 #define ADC_SOURCE_BULB 2
+#define ADC_SOURCE_TWILIGHT 3
+
+#define ADC_CONV_DELAY 2
+
+#define map_adc_source(src) (((ADC_CONV_DELAY) << 4) | (src))
 
 uint16_t __adc_count;
-
-#ifdef DEBUG
-
-uint16_t __dbg_bulb_adc_count;
-uint16_t __dbg_accu_adc_count;
-
-#define INCREMENT_IF_DEBUG(i) do{ i++; }while(0)
-
-#define NO_RESULT 0x92F4
-#define return_if_not_ready(adc_count)  \
-do {                                    \
-    if ((adc_count & 0x80) == 0) {      \
-        return NO_RESULT;               \
-    }                                   \
-} while (0)
-
-
-#else
-
-#define INCREMENT_IF_DEBUG(i) do{ }while(0)
-
-#define return_if_not_ready(adc_count) do { } while (0)
-
-#endif // DEBUG
-
 
 static inline void start_adc()
 {
@@ -84,7 +68,7 @@ inline void launch_bulb_adc()
 {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
-        __adc_source = 0x30 | ADC_SOURCE_BULB;
+        __adc_source = map_adc_source(ADC_SOURCE_BULB);
         // reset, aby zachować ciągłość pomiaru
         __bulb_adc_sum = 0;
         __bulb_adc_count = 0;
@@ -99,7 +83,7 @@ inline void launch_accu_adc()
 {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
-        __adc_source = 0x30 | ADC_SOURCE_ACCU;
+        __adc_source = map_adc_source(ADC_SOURCE_ACCU);
         // reset, aby zachować ciągłość pomiaru
         __accu_adc_sum = 0;
         __accu_adc_count = 0;
@@ -109,49 +93,75 @@ inline void launch_accu_adc()
     start_adc();
 }
 
-static inline void process_bulb_adc_result(uint16_t data_item) {
-    // 244 Hz PWM dają cykl około 4,1 ms
-    // co przy 13 cyklach na konwersję przy 125 kHz
-    // daje 0,104 ms potrzebne na próbkowanie sygnału
-    // co daje 39 próbek, które trzeba zebrać, żeby uśrednić sygnał
+inline void launch_twilight_adc()
+{
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    {
+        __adc_source = map_adc_source(ADC_SOURCE_TWILIGHT);
+        // reset, aby zachować ciągłość pomiaru
+        __twilight_adc_sum = 0;
+        __twilight_adc_count = 0;
+    }
+    // PA1 - MUX0
+    ADMUX = _BV(MUX0);
+    start_adc();
+}
 
-    __bulb_adc_sum += data_item;
-    if (++__bulb_adc_count == __bulb_adc_target) {
+static inline void process_adc_result(
+    uint16_t* accumulator, uint16_t data_item,
+    uint8_t* counter, uint8_t target_count)
+{
+    *accumulator += data_item;
+    if (++ (*counter) == target_count) {
         stop_adc();
-        __bulb_adc_count = 0xFF;
+        *counter = 0xFF;
         __adc_source = 0;
-        INCREMENT_IF_DEBUG(__dbg_bulb_adc_count);
     }
 }
 
-uint16_t get_bulb_adc_result()
+static inline uint16_t get_adc_result(uint16_t accumulator, uint8_t target_count)
 {
-    return_if_not_ready(__bulb_adc_count);
-    // calc mean of 40 results
-    uint16_t result = __bulb_adc_sum;
-    result /= 20;
+    uint16_t result = accumulator / (target_count / 2);
     result ++;
     result >>= 1;
     return result;
 }
 
-static inline void process_accu_adc_result(uint16_t data_item) {
-    __accu_adc_sum += data_item;
-    if (++__accu_adc_count == _BV(__accu_adc_bits)) {
-        stop_adc();
-        __accu_adc_count = 0xFF;
-        __adc_source = 0;
-        INCREMENT_IF_DEBUG(__dbg_accu_adc_count);
-    }
+static inline void process_bulb_adc_result(uint16_t data_item)
+{
+    // 244 Hz PWM dają cykl około 4,1 ms
+    // co przy 13 cyklach na konwersję przy 125 kHz
+    // daje 0,104 ms potrzebne na próbkowanie sygnału
+    // co daje 39 próbek, które trzeba zebrać, żeby uśrednić sygnał
+    process_adc_result(&__bulb_adc_sum, data_item, &__bulb_adc_count, __bulb_adc_target);
+}
+
+uint16_t get_bulb_adc_result()
+{
+    // calc mean of 40 results
+    return get_adc_result(__bulb_adc_sum, __bulb_adc_target);
+}
+
+static inline void process_accu_adc_result(uint16_t data_item)
+{
+    process_adc_result(&__accu_adc_sum, data_item, &__accu_adc_count, __accu_adc_target);
 }
 
 uint16_t get_accu_adc_result()
 {
-    return_if_not_ready(__accu_adc_count);
-    uint16_t result = __accu_adc_sum;
-    result >>= __accu_adc_bits - 1;
-    result ++;
-    result >>= 1;
+    return get_adc_result(__accu_adc_sum, __accu_adc_target);
+}
+
+static inline void process_twilight_adc_result(uint16_t data_item)
+{
+    process_adc_result(&__twilight_adc_sum, data_item, &__twilight_adc_count, __twilight_adc_target);
+}
+
+uint8_t get_twilight_adc_result()
+{
+    uint16_t result = get_adc_result(__twilight_adc_sum, __twilight_adc_target);
+    // z 12 bit schodzę na 8
+    result /= 4;
     return result;
 }
 
@@ -165,10 +175,12 @@ ISR (ADC_vect, ISR_BLOCK)
         process_accu_adc_result(adc_result);
     } else if (__adc_source == ADC_SOURCE_BULB) {
         // światła
-        // read ADCL
-        // read ADCH
         uint16_t adc_result = ADC;
         process_bulb_adc_result(adc_result);
+    } else if (__adc_source == ADC_SOURCE_TWILIGHT) {
+        // detektor zmierzchu
+        uint16_t adc_result = ADC;
+        process_twilight_adc_result(adc_result);
     } else  {
         __adc_source -= 0x10;
     }

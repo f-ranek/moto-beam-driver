@@ -24,6 +24,11 @@ static inline uint16_t get_timer_value() {
     return __timer_3ms_counter;
 }
 
+// get current timer value - last 8 bits
+static inline uint8_t get_timer8_value() {
+    return *((uint8_t*)(&__timer_3ms_counter));
+}
+
 // 1 second in 3ms ticks
 #define INTERVAL_ONE_SECOND ((uint16_t)(1000 / 3))
 // 2 seconds in 3ms ticks
