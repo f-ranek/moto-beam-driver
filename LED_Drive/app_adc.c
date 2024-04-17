@@ -5,6 +5,8 @@
  *  Author: Bogusław
  */
 
+#include <avr/pgmspace.h>
+
 #include "app_adc.h"
 #include "adc.h"
 #include "application.h"
@@ -74,19 +76,19 @@ static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
 static uint16_t next_adc_counter_read_timeline;
 void read_adc_results()
 {
-    if (is_bulb_adc_result_ready()) {
+    if (exchange_bulb_adc_result_ready()) {
         bulb_adc_result = smooth_value(bulb_adc_result, get_bulb_adc_result());
         app_debug_status.bulb_voltage_lo = bulb_adc_result;
         app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0x0F) | ((reverse_bytes(bulb_adc_result) & 0x0F) << 4);
     }
-    if (is_accu_adc_result_ready()) {
+    if (exchange_accu_adc_result_ready()) {
         accu_adc_result = smooth_value(accu_adc_result, get_accu_adc_result());
         __accu_status_value = calc_accu_status(accu_adc_result);
         app_debug_status.accu_voltage_lo = accu_adc_result;
         app_debug_status.adc_voltage_hi = (app_debug_status.adc_voltage_hi & 0xF0) | (reverse_bytes(accu_adc_result) & 0x0F);
     }
 
-    if (is_twilight_adc_result_ready()) {
+    if (exchange_twilight_adc_result_ready()) {
         twilight_adc_result = get_twilight_adc_result();
         app_debug_status.twilight_voltage = twilight_adc_result;
     }
@@ -98,88 +100,118 @@ void read_adc_results()
     }
 }
 
-/*
-// tu by się przydało takie wyliczenie, że z bieżących wartości
-// napięcia i pwm wyliczamy jakiś współczynnik korekcji
-// i on później jest uwzględniany
-static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
-{
-    if (accu_adc_result < VOLTAGE_12_5_V) {
-        // napięcie AKU mniejsze niż 12,5 V
-        return 255;
-    }
-    return 503 - (35 * accu_adc_result) / 128;
-}
-*/
+// static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
+// {
+//     if (accu_adc_result < VOLTAGE_13_V) {
+//         // napięcie AKU mniejsze niż około 13 V
+//         return 255;
+//     }
+//     if (accu_adc_result >= VOLTAGE_15_V) {
+//         // napięcie AKU większe niż 15 V
+//         return 198;
+//     }
+//     // y = -0,4725𝑥+681,01
+//     __uint24 buffer = accu_adc_result;
+//     buffer *= 4725;
+//     buffer = 6810100 - buffer;
+//     buffer /= 10000;
+//     int16_t result = buffer;
+//     /*
+//     float buffer = accu_adc_result;
+//     buffer *= -0.4725;
+//     int16_t result = buffer;
+//     result += 681;
+//     */
+//     if (result > 255) {
+//         return 255;
+//     }
+//     if (result < 198) {
+//         return 198;
+//     }
+//     return result;
+// }
 
-void adjust_target_pwm_value_impl(uint8_t current,
-    uint16_t accu_adc_result, uint16_t bulb_adc_result,
+static const uint8_t PWM_VALUES[] PROGMEM = {
+    254, 254, 253, 253, 252, 252, 251, 251, 250, 250, 249, 249, 248, 248, 247, 246,
+    246, 245, 244, 243, 243, 242, 242, 242, 242, 241, 241, 241, 240, 240, 239, 239,
+    238, 238, 237, 237, 236, 235, 234, 234, 233, 233, 232, 232, 231, 231, 230, 230,
+    230, 229, 229, 228, 228, 227, 227, 227, 226, 226, 225, 225, 224, 223, 223, 222,
+    222, 221, 221, 220, 220, 219, 219, 219, 219, 218, 218, 218, 217, 217, 216, 216,
+    215, 215, 214, 214, 213, 213, 212, 212, 211, 211, 210, 210, 210, 210, 209, 209,
+    209, 208, 208, 207, 207, 206, 206, 206, 205, 205, 204, 204, 203, 203, 202, 202,
+    201, 201, 200, 200, 200, 199, 199, 199
+};
+
+static uint8_t pwm_cache_key_0 = 0xFF;
+static uint8_t pwm_cache_value_0;
+static uint8_t pwm_cache_key_1 = 0xFF;
+static uint8_t pwm_cache_value_1;
+
+void adjust_target_pwm_value_impl(
+    uint16_t adc,
     pwm_consumer_t pm_consumer)
 {
-    if (accu_adc_result < VOLTAGE_12_5_V || bulb_adc_result > VOLTAGE_6_V) {
-        // napięcie AKU mniejsze niż 12,5 V
-        // lub napięcie żarówki > 6 V
+    if (adc < VOLTAGE_6_V) {
+        return;
+    }
+    if (adc > VOLTAGE_15_V) {
+        pm_consumer(198);
+        return;
+    }
+
+    if (adc <= 903) {
         pm_consumer(255);
-        return ;
-    }
-    uint16_t actual_bulb_voltage = accu_adc_result - bulb_adc_result;
-
-    if (actual_bulb_voltage < VOLTAGE_13_1_V) {
-        // mniej niż 13,1 V - idziemy do góry
-        uint8_t diff = (VOLTAGE_13_1_V - actual_bulb_voltage) / 4;
-        if (diff == 0) {
-            diff = 1;
-        } else if (diff > 10) {
-            diff = 10;
-        }
-        int16_t target = (int16_t)current + (int16_t)diff;
-        if (target > 255) {
-            target = 255;
-        }
-        pm_consumer(target);
-        return ;
+        return;
     }
 
-    const uint16_t max = VOLTAGE_13_1_V + VOLTAGE_0_05_V; // 0x389
-    if (actual_bulb_voltage > max) {                      // actual_bulb_voltage = max 0x3FF
-        uint8_t diff = (actual_bulb_voltage - max) / 4;
-        if (diff == 0) {
-            diff = 1;
-        } else if (diff > 10) {
-            diff = 10;
-        }
-        int16_t target = (int16_t)current - (int16_t)diff;
-        if (target < 0) {
-            target = 0;
-        }
-        pm_consumer(target);
-        return ;
-    }
+    const uint8_t index = adc - 904;
 
-    // nic nie trzeba robić
+    if (pwm_cache_key_0 == index) {
+        pm_consumer(pwm_cache_value_0);
+        return;
+    }
+    if (pwm_cache_key_1 == index) {
+        pm_consumer(pwm_cache_value_1);
+        return;
+    }
+    if (index < sizeof(PWM_VALUES)) {
+        uint8_t result = pgm_read_byte(&(PWM_VALUES[index]));
+        pwm_cache_key_1 = pwm_cache_key_0;
+        pwm_cache_value_1 = pwm_cache_value_0;
+        pwm_cache_key_0 = index;
+        pwm_cache_value_0 = result;
+        pm_consumer(result);
+    }
 }
 
 void adjust_target_pwm_value(
-    uint8_t current,
     pwm_consumer_t pm_consumer)
 {
-    adjust_target_pwm_value_impl(current, accu_adc_result, bulb_adc_result, pm_consumer);
+    adjust_target_pwm_value_impl(accu_adc_result, pm_consumer);
 }
+
+static uint8_t adc_launch_selector;
 
 void launch_adc()
 {
-    const uint8_t timer = get_timer8_value();
-    // odpalamy co 12 ms
-    // 0 1 2 3 4 5 6
-    switch (timer & 7) {
-        case 0:
-            launch_bulb_adc();
-            break;
-        case 3:
+    // accu - 7 ms   - 3 cykle
+    // bulb - 8,5 ms - 3 cykle
+    // twlg - 1,2 ms - 1 cykl
+
+    if (!is_adc_ready()) {
+        return ;
+    }
+
+    // twlg co 576 ms...
+    if (adc_launch_selector == 32) {
+        launch_twilight_adc();
+        adc_launch_selector = 0;
+    } else {
+        // pozostałe co 9 ms - na zmianę
+        if ((++adc_launch_selector) % 2 == 1) {
             launch_accu_adc();
-            break;
-        case 6:
-            launch_twilight_adc();
-            break;
+        } else {
+            launch_bulb_adc();
+        }
     }
 }

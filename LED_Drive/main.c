@@ -32,11 +32,22 @@ uint8_t restart_count __attribute__ ((section (".noinit")));;
 
 #ifdef SIMULATION
 
+#include "app_adc.h"
+
+extern void adjust_target_pwm_value_impl(
+    uint16_t adc,
+    pwm_consumer_t pm_consumer);
+
+void pm_consumer_impl(uint8_t val) {
+    GPIOR0 = val;
+}
+
 int main(void)
 {
     start_pwm();
     init_application();
 
+    /*
     while (1)
     {
         loop_application_logic();
@@ -44,6 +55,19 @@ int main(void)
         wdt_reset();
         sei();
     }
+    */
+
+    adjust_target_pwm_value_impl(800, &pm_consumer_impl);
+
+    adjust_target_pwm_value_impl(904, &pm_consumer_impl);
+
+    adjust_target_pwm_value_impl(909, &pm_consumer_impl);
+    adjust_target_pwm_value_impl(915, &pm_consumer_impl);
+    adjust_target_pwm_value_impl(925, &pm_consumer_impl);
+    adjust_target_pwm_value_impl(915, &pm_consumer_impl);
+    adjust_target_pwm_value_impl(925, &pm_consumer_impl);
+
+    adjust_target_pwm_value_impl(1023, &pm_consumer_impl);
 }
 #else // !SIMULATION
 int main(void)

@@ -56,7 +56,8 @@ static inline bool is_oil_or_charging()
     return is_oli_pressure() || ((accu_status = get_accu_status()) == CHARGING) || (accu_status == UNKNOWN);
 }
 
-#define BULB_BRIGHTENING_DELAY ((5000)/(3)/(225-2))
+#define BRIGHTENING_TARGET_PWM_VALUE 210
+#define BULB_BRIGHTENING_DELAY (5000/3/(BRIGHTENING_TARGET_PWM_VALUE-1))
 
 static uint16_t next_bulb_checkpoint;
 static uint16_t next_led_checkpoint;
@@ -83,7 +84,7 @@ static void handle_app_init_state()
     // prawdopodobnie coś jebło, a jedziemy - od razu 100%
     if (init_first_pass && is_gear_engaged() && is_oil_or_charging()) {
         app_state = APP_AUTO_ON;
-        start_bulb_pwm(220);
+        start_bulb_pwm(BRIGHTENING_TARGET_PWM_VALUE);
         set_led_on();
         return ;
     }
@@ -104,7 +105,7 @@ static void handle_app_init_state()
         return ;
     }
 
-    if (btn && !oil_or_charging || btn_hold) {
+    if ((btn && !oil_or_charging) || btn_hold) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;
@@ -124,7 +125,7 @@ static void handle_app_force_off_state()
         app_state = APP_AUTO_BRIGHTENING;
         return ;
     }
-    if (btn && !oil_or_charging || btn_hold) {
+    if ((btn && !oil_or_charging) || btn_hold) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;
@@ -158,7 +159,7 @@ static void handle_app_auto_brightening_state()
         // TODO: sekunda przed rozpoczęciem rozjaśniania
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
-        if (current_power < 220) {
+        if (current_power < BRIGHTENING_TARGET_PWM_VALUE) {
             adjust_bulb_power(current_power + 1);
             next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
@@ -200,12 +201,7 @@ static void handle_app_auto_on_state()
         return ;
     }
 
-    // co 48 ms
-    if ((timer & 0xF) == 0xF) {
-        adjust_target_pwm_value(
-            get_bulb_power(),
-            &set_bulb_power);
-    }
+    adjust_target_pwm_value(&set_bulb_power);
 }
 
 // żarówka za chwilę zgaśnie
@@ -289,7 +285,7 @@ static void handle_app_force_brightening_state()
         // TODO: sekunda przed rozpoczęciem rozjaśniania
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
-        if (current_power < 220) {
+        if (current_power < BRIGHTENING_TARGET_PWM_VALUE) {
             adjust_bulb_power(current_power + 1);
             next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
@@ -337,12 +333,7 @@ static void handle_app_force_on_state()
         return ;
     }
 
-    // co 48 ms
-    if ((((uint8_t)timer) & 0xF) == 0xF) {
-        adjust_target_pwm_value(
-            get_bulb_power(),
-            &set_bulb_power);
-    }
+    adjust_target_pwm_value(&set_bulb_power);
 }
 
 // wymuszenie włączenia, ale kręci rozrusznik lub nie ma ładowania
@@ -422,30 +413,36 @@ static void execute_state_transition_changes()
 /*
 static void execute_state_transition_changes() {
     // 0 1 2 ... 10, 20, 30
+    if (exchange_was_btn_hold_for_1_sec()) {
+        app_state = APP_FORCE_OFF;
+        set_bulb_power(0);
+        set_led_off();
+        const uint64_t timer = get_timer_value();
+        next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
+        return ;
+    }
     if (exchange_button_release_flag()) {
-        uint8_t bulb_power = get_bulb_power();
+        const uint8_t bulb_power = get_bulb_power();
+        const uint64_t timer = get_timer_value();
         if (bulb_power == 0) {
             set_led_on();
+            next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
             app_state = APP_FORCE_BRIGHTENING;
             set_bulb_power(1);
         } else if (bulb_power < 10) {
             set_bulb_power(bulb_power + 1);
         } else if (bulb_power <= 240) {
-            app_state = APP_FORCE_BRIGHTENING;
             set_bulb_power(bulb_power + 10);
         } else if (bulb_power < 255) {
-            app_state = APP_FORCE_ON;
+            app_state = bulb_power == 254 ? APP_FORCE_ON : APP_FORCE_BRIGHTENING;
             set_bulb_power(bulb_power + 1);
         } else if (bulb_power == 255) {
             app_state = APP_FORCE_OFF;
             set_bulb_power(0);
             set_led_off();
+            next_led_checkpoint = timer + INTERVAL_FIFTH_SECOND;
         }
     }
-}
-
-static void execute_led_changes() {
-
 }
 */
 

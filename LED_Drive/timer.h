@@ -26,6 +26,7 @@ static inline uint16_t get_timer_value() {
 
 // get current timer value - last 8 bits
 static inline uint8_t get_timer8_value() {
+    // little endian - mico optimization
     return *((uint8_t*)(&__timer_3ms_counter));
 }
 

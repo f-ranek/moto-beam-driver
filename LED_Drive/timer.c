@@ -35,11 +35,10 @@ void setup_timer_3ms()
     // 101 - /1024
     TCCR1B = _BV(WGM12) | _BV(CS11);
 }
-
-#ifndef SIMULATION
-
 // maks 196 sekund
 uint16_t __timer_3ms_counter;
+
+#ifndef SIMULATION
 
 // interrupt every 3 ms
 ISR (TIM1_COMPA_vect, ISR_NOBLOCK)

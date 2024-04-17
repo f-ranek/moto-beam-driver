@@ -21,6 +21,7 @@
 #define VOLTAGE_13_1_V (0x386)
 #define VOLTAGE_13_2_V (0x38D)
 #define VOLTAGE_13_5_V (0x3A1)
+#define VOLTAGE_15_V   (0x3FF)
 
 #define VOLTAGE_0_03_V (0x2)
 #define VOLTAGE_0_05_V (0x3)
@@ -32,9 +33,7 @@ extern void read_adc_results();
 
 typedef void (*pwm_consumer_t)(uint8_t);
 
-extern void adjust_target_pwm_value(
-    uint8_t current,
-    pwm_consumer_t pm_consumer);
+extern void adjust_target_pwm_value(pwm_consumer_t pm_consumer);
 
 typedef enum __accu_status {
     UNKNOWN,
