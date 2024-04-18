@@ -10,8 +10,11 @@
 #define MAIN_H_
 
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 
 extern uint8_t restart_count;
 #define MCUSR_initial_copy GPIOR0
+
+extern const char VERSION[] PROGMEM;
 
 #endif /* MAIN_H_ */

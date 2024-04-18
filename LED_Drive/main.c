@@ -72,6 +72,7 @@ int main(void)
 #else // !SIMULATION
 int main(void)
 {
+    pgm_read_byte(&(VERSION));
     setup_timer_3ms();
     start_pwm();
     init_application();
