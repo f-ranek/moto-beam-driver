@@ -28,12 +28,15 @@
 #define VOLTAGE_0_1_V  (0x7)
 #define VOLTAGE_0_5_V  (0x23)
 
+#define BRIGHTENING_TARGET_PWM_VALUE 210
+
 extern void launch_adc();
 extern void read_adc_results();
 
 typedef void (*pwm_consumer_t)(uint8_t);
 
 extern void adjust_target_pwm_value(pwm_consumer_t pm_consumer);
+extern uint8_t calc_target_pwm_value();
 
 typedef enum __accu_status {
     UNKNOWN,

@@ -56,7 +56,6 @@ static inline bool is_oil_or_charging()
     return is_oli_pressure() || ((accu_status = get_accu_status()) == CHARGING) || (accu_status == UNKNOWN);
 }
 
-#define BRIGHTENING_TARGET_PWM_VALUE 210
 #define BULB_BRIGHTENING_DELAY (5000/3/(BRIGHTENING_TARGET_PWM_VALUE-1))
 
 static uint16_t next_bulb_checkpoint;
@@ -159,7 +158,7 @@ static void handle_app_auto_brightening_state()
         // TODO: sekunda przed rozpoczęciem rozjaśniania
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
-        if (current_power < BRIGHTENING_TARGET_PWM_VALUE) {
+        if (current_power < calc_target_pwm_value()) {
             adjust_bulb_power(current_power + 1);
             next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
@@ -285,7 +284,7 @@ static void handle_app_force_brightening_state()
         // TODO: sekunda przed rozpoczęciem rozjaśniania
         // rozjaśnianie
         uint8_t current_power = get_bulb_pwm_duty_cycle();
-        if (current_power < BRIGHTENING_TARGET_PWM_VALUE) {
+        if (current_power < calc_target_pwm_value()) {
             adjust_bulb_power(current_power + 1);
             next_bulb_checkpoint = timer + BULB_BRIGHTENING_DELAY;
         } else {
@@ -343,7 +342,7 @@ static void handle_app_force_on_starter_state()
     // naciśnięcie przełącza w tryb auto
     const bool btn = exchange_button_release_flag();
     const bool btn_hold = exchange_was_btn_hold_for_1_sec();
-    if ((btn || is_oil_or_charging()) && (get_accu_status() != STARTER_RUNNING)) {
+    if ((btn || is_oil_or_charging()) && get_accu_status() != STARTER_RUNNING) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;

@@ -129,6 +129,7 @@ void initial_setup()
 {
     // read reset cause
     MCUSR_initial_copy = MCUSR;
+    MCUSR = 0;
     if ((MCUSR & _BV(PORF)) != 0 && (restart_count & 0xF0) != 0) {
         restart_count = 0;
     }

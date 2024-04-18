@@ -66,11 +66,11 @@ static inline __attribute__ ((always_inline)) uint16_t reverse_bytes(uint16_t ar
 
 static inline uint16_t smooth_value(uint16_t old_val, uint16_t new_val)
 {
-    if (old_val == 0) {
+    //if (old_val == 0) {
         return new_val;
-    } else {
-        return (new_val + old_val) / 2;
-    }
+    //} else {
+    //    return (new_val + old_val) / 2;
+    //}
 }
 
 static uint16_t next_adc_counter_read_timeline;
@@ -100,37 +100,6 @@ void read_adc_results()
     }
 }
 
-// static uint8_t calc_target_pwm_value(uint16_t accu_adc_result)
-// {
-//     if (accu_adc_result < VOLTAGE_13_V) {
-//         // napięcie AKU mniejsze niż około 13 V
-//         return 255;
-//     }
-//     if (accu_adc_result >= VOLTAGE_15_V) {
-//         // napięcie AKU większe niż 15 V
-//         return 198;
-//     }
-//     // y = -0,4725𝑥+681,01
-//     __uint24 buffer = accu_adc_result;
-//     buffer *= 4725;
-//     buffer = 6810100 - buffer;
-//     buffer /= 10000;
-//     int16_t result = buffer;
-//     /*
-//     float buffer = accu_adc_result;
-//     buffer *= -0.4725;
-//     int16_t result = buffer;
-//     result += 681;
-//     */
-//     if (result > 255) {
-//         return 255;
-//     }
-//     if (result < 198) {
-//         return 198;
-//     }
-//     return result;
-// }
-
 static const uint8_t PWM_VALUES[] PROGMEM = {
     254, 254, 253, 253, 252, 252, 251, 251, 250, 250, 249, 249, 248, 248, 247, 246,
     246, 245, 244, 243, 243, 242, 242, 242, 242, 241, 241, 241, 240, 240, 239, 239,
@@ -145,41 +114,47 @@ static const uint8_t PWM_VALUES[] PROGMEM = {
 static uint8_t pwm_cache_key = 0xFF;
 static uint8_t pwm_cache_value;
 
-void adjust_target_pwm_value_impl(
-    uint16_t adc,
-    pwm_consumer_t pm_consumer)
+uint8_t calc_target_pwm_value_impl(uint16_t adc)
 {
     if (adc < VOLTAGE_6_V) {
-        return;
+        return 0;
     }
     if (adc > VOLTAGE_15_V) {
-        pm_consumer(198);
-        return;
+        return 198;
     }
 
     if (adc <= 903) {
-        pm_consumer(255);
-        return;
+        return 255;
     }
 
     const uint8_t index = adc - 904;
 
     if (pwm_cache_key == index) {
-        pm_consumer(pwm_cache_value);
-        return;
+        return pwm_cache_value;
     }
+
     if (index < sizeof(PWM_VALUES)) {
         uint8_t result = pgm_read_byte(&(PWM_VALUES[index]));
         pwm_cache_key = index;
         pwm_cache_value = result;
+        return pwm_cache_value;
+    }
+
+    return 0;
+}
+
+void adjust_target_pwm_value(pwm_consumer_t pm_consumer)
+{
+    uint8_t result = calc_target_pwm_value_impl(accu_adc_result);
+    if (result > 0) {
         pm_consumer(result);
     }
 }
 
-void adjust_target_pwm_value(
-    pwm_consumer_t pm_consumer)
+uint8_t calc_target_pwm_value()
 {
-    adjust_target_pwm_value_impl(accu_adc_result, pm_consumer);
+    uint8_t result = calc_target_pwm_value_impl(accu_adc_result);
+    return result == 0 ? BRIGHTENING_TARGET_PWM_VALUE : result;
 }
 
 static uint8_t adc_launch_selector;
