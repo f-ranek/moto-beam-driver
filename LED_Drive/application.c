@@ -21,7 +21,7 @@
 
 app_debug_status_t app_debug_status;
 
-static enum app_state_e {
+typedef enum app_state_e {
     // 0 - initial status, bulb off
     APP_INIT,
 
@@ -48,7 +48,8 @@ static enum app_state_e {
 
     // 8 - forced on, but starter running
     APP_FORCE_ON_STARTER
-} app_state;
+} app_state_t;
+static app_state_t app_state;
 
 static inline bool is_oil_or_charging()
 {
@@ -72,28 +73,32 @@ static void start_bulb_brightening()
     next_led_checkpoint = timer + INTERVAL_HALF_A_SECOND;
 }
 
-static bool init_first_pass_done;
+static bool first_pass_init_done;
 
 // status początkowy
 // 0
 static void handle_app_init_state()
 {
-    const bool init_first_pass = !init_first_pass_done;
-    init_first_pass_done = init_first_pass_done || (get_timer_value() == 16);
+    const uint16_t timer = get_timer_value();
     // prawdopodobnie coś jebło, a jedziemy - od razu 100%
-    if (init_first_pass && is_gear_engaged() && is_oil_or_charging()) {
+    bool check_first_pass = false;
+    if (first_pass_init_done == false && timer == 16) {
+        check_first_pass = first_pass_init_done = true;
+    }
+
+    if (check_first_pass && is_gear_engaged() && is_oil_or_charging()) {
         app_state = APP_AUTO_ON;
         start_bulb_pwm(BRIGHTENING_TARGET_PWM_VALUE);
         set_led_on();
         return ;
     }
 
-
     const bool btn = exchange_button_release_flag();
     const bool btn_hold = exchange_was_btn_hold_for_1_sec();
-    if (is_gear_engaged() && is_button_pressed()) {
-        ignore_next_button_release();
+    if (btn_hold) {
         app_state = APP_FORCE_OFF;
+        set_led_on();
+        next_led_checkpoint = timer + INTERVAL_ONE_SECOND;
         return ;
     }
 
@@ -104,7 +109,7 @@ static void handle_app_init_state()
         return ;
     }
 
-    if ((btn && !oil_or_charging) || btn_hold) {
+    if (btn && !oil_or_charging) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;
@@ -245,7 +250,16 @@ static void handle_app_waiting_for_bulb_off_state()
 // 5
 static void handle_app_auto_off_state()
 {
-    if (exchange_button_release_flag()) {
+    const bool btn = exchange_button_release_flag();
+    const bool btn_hold = exchange_was_btn_hold_for_1_sec();
+
+    if (btn_hold) {
+        app_state = APP_FORCE_OFF;
+        set_led_on();
+        next_led_checkpoint = get_timer_value() + INTERVAL_ONE_SECOND;
+        return ;
+    }
+    if (btn && get_accu_status() != STARTER_RUNNING) {
         start_bulb_brightening();
         app_state = APP_FORCE_BRIGHTENING;
         return ;
@@ -263,7 +277,7 @@ static void handle_app_force_brightening_state()
 {
     const uint16_t timer = get_timer_value();
 
-    // naciśnięcie wyłącza - bz.
+    // naciśnięcie wyłącza
     const bool btn = exchange_button_release_flag();
     const bool btn_hold = exchange_was_btn_hold_for_1_sec();
     if (btn || btn_hold) {
@@ -275,7 +289,7 @@ static void handle_app_force_brightening_state()
     }
 
     if (get_accu_status() == STARTER_RUNNING) {
-        app_state = APP_FORCE_ON_STARTER; // zm.
+        app_state = APP_FORCE_ON_STARTER;
         set_bulb_on_off(false);
         return ;
     }
@@ -535,8 +549,24 @@ static void execute_led_changes()
     next_led_checkpoint = timer + (led_interval == 0 ? INTERVAL_FIFTH_SECOND : led_interval);
 }
 
-static inline void emmit_debug_data()
+static app_state_t hist_app_state;
+static uint16_t app_loop_reset_checkpoint;
+static inline void emmit_debug_data(app_state_t prev_app_state)
 {
+    const uint16_t timer = get_timer_value();
+    // app_state        - bieżący     (0)
+    // prev_app_state   - poprzedni   (-1)
+    // hist_app_state   - historyczny (-2)
+    if (app_state != prev_app_state && prev_app_state != hist_app_state) {
+        // tutaj teoretycznie możemy trafić na zero, ale jest to mało prawdopodobne
+        // poza tym jak się aplikacja zapętli, to chyba przy następnym przejściu też
+        // ta flaga się zaświeci, i wtedy app_loop_reset_timeline != 0
+        app_loop_reset_checkpoint = timer + INTERVAL_TWO_SECONDS;
+    } else if (app_loop_reset_checkpoint == timer) {
+        app_loop_reset_checkpoint = 0;
+    }
+    hist_app_state = prev_app_state;
+
     app_debug_status.bulb_pwm = get_bulb_power();
     app_debug_status.app_status = app_state;
 
@@ -550,6 +580,7 @@ static inline void emmit_debug_data()
     input_state <<= 1;
 
     input_state <<= 1;
+    input_state |= app_loop_reset_checkpoint != 0 ? 1 : 0;
     input_state <<= 1;
     input_state |= is_oil_or_charging() ? 1 : 0;
 
@@ -567,8 +598,9 @@ void loop_application_logic()
     read_pin_values();
     read_adc_results();
     execute_led_changes();
+    app_state_t prev_app_state = app_state;
     execute_state_transition_changes();
-    emmit_debug_data();
+    emmit_debug_data(prev_app_state);
     emmit_morse_status_code_if_ready(app_state);
     launch_adc();
     /*

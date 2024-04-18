@@ -193,17 +193,19 @@ uint8_t get_twilight_adc_result()
 // adc done interrupt
 ISR (ADC_vect, ISR_BLOCK)
 {
-    __adc_count++;
     if(__adc_source == ADC_SOURCE_ACCU) {
         // akumulator
+        __adc_count++;
         uint16_t adc_result = ADC;
         process_accu_adc_result(adc_result);
     } else if (__adc_source == ADC_SOURCE_BULB) {
         // światła
+        __adc_count++;
         uint16_t adc_result = ADC;
         process_bulb_adc_result(adc_result);
     } else if (__adc_source == ADC_SOURCE_TWILIGHT) {
         // detektor zmierzchu
+        __adc_count++;
         uint16_t adc_result = ADC;
         process_twilight_adc_result(adc_result);
     } else  {

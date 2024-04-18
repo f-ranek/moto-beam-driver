@@ -33,7 +33,7 @@ typedef struct __app_debug_status {
                                 //      (2)   - gear enaged
                                 //      (1)
                                 //   lo:
-                                //      (8)
+                                //      (8)   - app loop detected
                                 //      (4)   - oil or charging
                                 //      (3-0) - accu state
                                 //              11 - charging
@@ -49,7 +49,7 @@ typedef struct __app_debug_status {
                                 //      (2) - external (PIN) reset
                                 //      (1) - power on reset
     uint8_t twilight_voltage;   // 8
-    uint16_t adc_count;         // 9,10  - 6482 (1952) - 6490 (195A) - 6501 (1965)
+    uint16_t adc_count;         // 9,10
 } app_debug_status_t;
 
 extern app_debug_status_t app_debug_status;
