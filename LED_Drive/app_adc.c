@@ -142,10 +142,8 @@ static const uint8_t PWM_VALUES[] PROGMEM = {
     201, 201, 200, 200, 200, 199, 199, 199
 };
 
-static uint8_t pwm_cache_key_0 = 0xFF;
-static uint8_t pwm_cache_value_0;
-static uint8_t pwm_cache_key_1 = 0xFF;
-static uint8_t pwm_cache_value_1;
+static uint8_t pwm_cache_key = 0xFF;
+static uint8_t pwm_cache_value;
 
 void adjust_target_pwm_value_impl(
     uint16_t adc,
@@ -166,20 +164,14 @@ void adjust_target_pwm_value_impl(
 
     const uint8_t index = adc - 904;
 
-    if (pwm_cache_key_0 == index) {
-        pm_consumer(pwm_cache_value_0);
-        return;
-    }
-    if (pwm_cache_key_1 == index) {
-        pm_consumer(pwm_cache_value_1);
+    if (pwm_cache_key == index) {
+        pm_consumer(pwm_cache_value);
         return;
     }
     if (index < sizeof(PWM_VALUES)) {
         uint8_t result = pgm_read_byte(&(PWM_VALUES[index]));
-        pwm_cache_key_1 = pwm_cache_key_0;
-        pwm_cache_value_1 = pwm_cache_value_0;
-        pwm_cache_key_0 = index;
-        pwm_cache_value_0 = result;
+        pwm_cache_key = index;
+        pwm_cache_value = result;
         pm_consumer(result);
     }
 }
