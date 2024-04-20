@@ -561,7 +561,7 @@ static inline void emmit_debug_data(app_state_t prev_app_state)
         // tutaj teoretycznie możemy trafić na zero, ale jest to mało prawdopodobne
         // poza tym jak się aplikacja zapętli, to chyba przy następnym przejściu też
         // ta flaga się zaświeci, i wtedy app_loop_reset_timeline != 0
-        app_loop_reset_checkpoint = timer + INTERVAL_TWO_SECONDS;
+        app_loop_reset_checkpoint = timer + INTERVAL_THREE_SECONDS;
     } else if (app_loop_reset_checkpoint == timer) {
         app_loop_reset_checkpoint = 0;
     }
